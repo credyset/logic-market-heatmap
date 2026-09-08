@@ -59,54 +59,27 @@ body.theme-agency .brand .eyebrow { color: var(--accent-a); -webkit-text-fill-co
 body.theme-pac .btn.active[data-arm="Pac"] { background: var(--accent-p); border-color: var(--accent-p); color: var(--navy); }
 body.theme-pac .brand .eyebrow { color: var(--accent-p); -webkit-text-fill-color: var(--accent-p); background: none; }
 
-/* Floating topic labels (CSS2D) */
-.topic-label {
+/* Floating topic tags (CSS2D) — minimal text, no box */
+.topic-tag {
   pointer-events: auto;
   cursor: pointer;
   text-align: center;
-  transition: opacity .3s, transform .3s;
-}
-.topic-label .label-card {
-  display: inline-block;
-  background: rgba(8, 10, 18, 0.85);
-  border: 1px solid rgba(255,255,255,.15);
-  border-radius: 8px;
-  padding: 6px 14px 5px;
-  backdrop-filter: blur(8px);
-  max-width: 240px;
-}
-.topic-label:hover .label-card {
-  border-color: rgba(255,255,255,.45);
-  background: rgba(12, 14, 26, 0.95);
-}
-.topic-label .label-text {
-  font: 600 11px/1.3 Poppins;
-  color: #e8ecf4;
-  display: block;
+  transition: opacity .3s;
+  font: 500 10px/1.2 DM Mono, monospace;
+  letter-spacing: .02em;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 216px;
+  text-shadow: 0 1px 6px rgba(0,0,0,.9), 0 0 20px rgba(0,0,0,.6);
 }
-.topic-label .label-arm {
-  font: 500 9px DM Mono;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 3px;
-  margin-top: 2px;
-}
-.topic-label .label-arm.agency { background: rgba(255,96,10,.2); color: #FF600A; }
-.topic-label .label-arm.pac { background: rgba(224,253,44,.15); color: #E0FD2C; }
-.topic-label .label-count {
-  font: 400 9px DM Mono;
-  color: rgba(255,255,255,.3);
-  margin-top: 1px;
-  display: block;
-}
-.topic-label.dimmed { opacity: 0.15; }
-.topic-label.hidden { display: none; }
+.topic-tag.agency { color: rgba(255,96,10,.7); }
+.topic-tag.pac { color: rgba(224,253,44,.6); }
+.topic-tag:hover { opacity: 1 !important; }
+.topic-tag:hover.agency { color: #FF600A; text-shadow: 0 0 12px rgba(255,96,10,.4); }
+.topic-tag:hover.pac { color: #E0FD2C; text-shadow: 0 0 12px rgba(224,253,44,.3); }
+.topic-tag.active { opacity: 1 !important; }
+.topic-tag.active.agency { color: #FF600A; }
+.topic-tag.active.pac { color: #E0FD2C; }
+.topic-tag.dimmed { opacity: 0.08; }
+.topic-tag.hidden { display: none; }
 
 /* Info panel */
 .info-panel {
@@ -416,19 +389,20 @@ for (const node of data.nodes) {
   glow.userData = { nodeRef: node.id };
   nodeGroup.add(glow);
 
-  // Floating subject card (CSS2D label)
+  // Minimal floating tag (CSS2D)
   const el = document.createElement('div');
-  el.className = 'topic-label';
+  el.className = 'topic-tag ' + node.arm.toLowerCase();
   el.dataset.arm = node.arm;
-  const shortLabel = node.label.length > 38 ? node.label.slice(0, 36) + '…' : node.label;
-  el.innerHTML = `<div class="label-card"><span class="label-text">${shortLabel}</span><span class="label-arm ${node.arm.toLowerCase()}">${node.arm}</span><span class="label-count">${node.mentions.toLocaleString()} mentions</span></div>`;
+  const words = node.label.split(/[,]/)[0].trim();
+  const shortLabel = words.length > 28 ? words.slice(0, 26) + '...' : words;
+  el.textContent = shortLabel;
   el.addEventListener('click', (e) => {
     e.stopPropagation();
     selectNode(points, false);
     controls.autoRotate = false;
   });
   const labelObj = new CSS2DObject(el);
-  labelObj.position.set(node.pos[0], node.pos[1] + node.radius + 0.5, node.pos[2]);
+  labelObj.position.set(node.pos[0], node.pos[1] + node.radius + 0.35, node.pos[2]);
   labelObj.userData = { arm: node.arm, nodeId: node.id };
   scene.add(labelObj);
   labelObjects.push({ obj: labelObj, el, arm: node.arm, nodeId: node.id });
@@ -664,9 +638,10 @@ function selectNode(obj, fromScroll) {
   document.getElementById('panelContent').innerHTML = html;
   document.getElementById('infoPanel').classList.add('open');
 
-  // Dim non-selected labels
+  // Dim non-selected labels, highlight active
   for (const lo of labelObjects) {
     lo.el.classList.toggle('dimmed', lo.nodeId !== node.id);
+    lo.el.classList.toggle('active', lo.nodeId === node.id);
   }
 
   const target = new THREE.Vector3(...node.pos);
@@ -678,7 +653,7 @@ function deselectNode() {
   selectedNode = null;
   document.getElementById('infoPanel').classList.remove('open');
   for (const obj of nodeObjects) obj.material.uniforms.highlight.value = 0;
-  for (const lo of labelObjects) lo.el.classList.remove('dimmed');
+  for (const lo of labelObjects) { lo.el.classList.remove('dimmed'); lo.el.classList.remove('active'); }
 }
 
 document.getElementById('closePanel').addEventListener('click', deselectNode);
