@@ -5,22 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Logic Market Heatmap — 3D Topic Explorer</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Serif+Display&family=Poppins:wght@400;500;600;700;800&display=swap');
 
 :root {
   --ink: #050d1f;
   --paper: #020810;
-  --accent-a: #e0fd2c;
-  --accent-p: #ef6f45;
+  --accent-a: #FF600A;
+  --accent-a-dk: #E55509;
+  --accent-p: #E0FD2C;
+  --accent-p-dk: #C8E820;
+  --navy: #050D1F;
+  --navy-md: #0D1F4A;
+  --dk: #2A2A2A;
   --muted: #596579;
   --panel: rgba(12, 20, 40, 0.92);
   --line: rgba(80, 100, 140, 0.25);
-  --hero-a: #07152e;
-  --hero-p: #2b211e;
+  --hero-a: #2A2A2A;
+  --hero-p: #050D1F;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: auto; }
-body { background: var(--paper); color: #d8dde8; font: 14px/1.5 Manrope, sans-serif; }
+body { background: var(--paper); color: #d8dde8; font: 14px/1.5 Poppins, sans-serif; }
 canvas#scene { display: block; position: fixed; inset: 0; z-index: 0; }
 
 /* Scroll container underneath the fixed canvas */
@@ -38,10 +43,11 @@ canvas#scene { display: block; position: fixed; inset: 0; z-index: 0; }
 }
 .brand { display: flex; flex-direction: column; gap: 4px; }
 .brand .eyebrow {
-  font: 500 10px DM Mono; letter-spacing: .18em; text-transform: uppercase;
+  font: 600 10px Poppins; letter-spacing: .18em; text-transform: uppercase;
   transition: color .4s;
 }
-.brand h1 { font-size: 28px; letter-spacing: -.04em; line-height: 1; color: white; }
+.brand h1 { font: 800 28px/1 Poppins; letter-spacing: -.04em; color: white; }
+body.theme-pac .brand h1 { font-family: 'DM Serif Display', serif; font-weight: 400; letter-spacing: -.02em; }
 .brand .sub { font: 12px DM Mono; color: var(--muted); margin-top: 4px; transition: color .4s; }
 
 .controls { display: flex; gap: 8px; align-items: center; }
@@ -58,11 +64,11 @@ body.theme-all .btn.active[data-arm="all"] { background: linear-gradient(135deg,
 body.theme-all .brand .eyebrow { background: linear-gradient(90deg, var(--accent-a), var(--accent-p)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 body.theme-all .brand .sub { color: #7a8899; }
 
-body.theme-agency .btn.active[data-arm="Agency"] { background: var(--accent-a); border-color: var(--accent-a); }
+body.theme-agency .btn.active[data-arm="Agency"] { background: var(--accent-a); border-color: var(--accent-a); color: #fff; }
 body.theme-agency .brand .eyebrow { color: var(--accent-a); -webkit-text-fill-color: var(--accent-a); background: none; }
 body.theme-agency .brand .sub { color: var(--accent-a); opacity: .55; }
 
-body.theme-pac .btn.active[data-arm="Pac"] { background: var(--accent-p); border-color: var(--accent-p); }
+body.theme-pac .btn.active[data-arm="Pac"] { background: var(--accent-p); border-color: var(--accent-p); color: var(--navy); }
 body.theme-pac .brand .eyebrow { color: var(--accent-p); -webkit-text-fill-color: var(--accent-p); background: none; }
 body.theme-pac .brand .sub { color: var(--accent-p); opacity: .55; }
 
@@ -538,8 +544,8 @@ function setArm(arm) {
     line.visible = src?.visible && tgt?.visible;
   }
 
-  // Update fog color per theme
-  const fogColor = arm === 'Pac' ? 0x0a0806 : 0x020810;
+  // Update fog/bg per real brand: Agency=#2A2A2A dark gray, Pac=#050D1F navy, All=deep space
+  const fogColor = arm === 'Agency' ? 0x1a1a1a : arm === 'Pac' ? 0x030a18 : 0x020810;
   scene.fog = new THREE.FogExp2(fogColor, 0.035);
   renderer.setClearColor(fogColor, 1);
 
@@ -553,27 +559,26 @@ document.querySelectorAll('.btn[data-arm]').forEach(btn => {
 
 function updateLegend(arm) {
   const legends = arm === 'Pac' ? {
-    'Design & consumer experience': '#e0fd2c',
-    'Retail & consumer performance': '#4fc3f7',
-    'Materials & sustainability': '#66bb6a',
-    'Manufacturing & execution': '#ff7043',
-    'Circular systems': '#26c6da',
-    'Claims & compliance': '#ab47bc',
+    'Design & consumer experience': '#E0FD2C',
+    'Retail & consumer performance': '#C8E820',
+    'Materials & sustainability': '#66BB6A',
+    'Manufacturing & execution': '#D4E87A',
+    'Circular systems': '#26C6DA',
+    'Claims & compliance': '#B8C0D0',
   } : arm === 'Agency' ? {
-    'Retail & distribution': '#4fc3f7',
-    'Manufacturing & suppliers': '#ff7043',
-    'Financial & operational': '#e0fd2c',
-    'Channel strategy': '#ab47bc',
-    'Packaging & compliance': '#66bb6a',
-    'Operational technology': '#26c6da',
+    'Retail & distribution': '#FF600A',
+    'Manufacturing & suppliers': '#FF8A50',
+    'Financial & operational': '#FFB74D',
+    'Channel strategy': '#E55509',
+    'Packaging & compliance': '#FF7043',
+    'Operational technology': '#0055FF',
   } : {
-    'Retail ops': '#4fc3f7',
-    'Manufacturing': '#ff7043',
-    'Finance & control': '#e0fd2c',
-    'Design & brand': '#e0fd2c',
-    'Materials': '#66bb6a',
-    'Circularity': '#26c6da',
-    'Channel': '#ab47bc',
+    'Agency — Retail ops': '#FF600A',
+    'Agency — Manufacturing': '#FF8A50',
+    'Agency — Finance': '#FFB74D',
+    'Pac — Design & brand': '#E0FD2C',
+    'Pac — Materials': '#66BB6A',
+    'Pac — Retail fit': '#C8E820',
   };
 
   let html = '<h3>Topic families</h3><div class="legend-items">';

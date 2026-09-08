@@ -7,7 +7,7 @@
       "parent": "Retail and distribution operations",
       "mentions": 3685,
       "share": 14.06,
-      "color": "#4fc3f7",
+      "color": "#FF600A",
       "pos": [
         -4.246,
         1.1124,
@@ -22,7 +22,7 @@
       "parent": "Retail and distribution operations",
       "mentions": 3101,
       "share": 11.83,
-      "color": "#4fc3f7",
+      "color": "#FF600A",
       "pos": [
         -3.598,
         0.1398,
@@ -37,7 +37,7 @@
       "parent": "Retail and distribution operations",
       "mentions": 2575,
       "share": 9.82,
-      "color": "#4fc3f7",
+      "color": "#FF600A",
       "pos": [
         -4.2055,
         0.2925,
@@ -52,7 +52,7 @@
       "parent": "Channel strategy",
       "mentions": 2091,
       "share": 7.98,
-      "color": "#ab47bc",
+      "color": "#E55509",
       "pos": [
         -3.7564,
         -1.3137,
@@ -67,7 +67,7 @@
       "parent": "Retail and distribution operations",
       "mentions": 2074,
       "share": 7.91,
-      "color": "#4fc3f7",
+      "color": "#FF600A",
       "pos": [
         -3.6046,
         2.3447999999999998,
@@ -82,7 +82,7 @@
       "parent": "Retail and distribution operations",
       "mentions": 1957,
       "share": 7.47,
-      "color": "#4fc3f7",
+      "color": "#FF600A",
       "pos": [
         -3.3904,
         0.2424,
@@ -97,7 +97,7 @@
       "parent": "Manufacturing and supplier management",
       "mentions": 1873,
       "share": 7.14,
-      "color": "#ff7043",
+      "color": "#FF8A50",
       "pos": [
         -3.5907999999999998,
         -1.8444,
@@ -112,7 +112,7 @@
       "parent": "Retail and distribution operations",
       "mentions": 1548,
       "share": 5.91,
-      "color": "#4fc3f7",
+      "color": "#FF600A",
       "pos": [
         -6.382,
         -1.9587,
@@ -127,7 +127,7 @@
       "parent": "Manufacturing and supplier management",
       "mentions": 1223,
       "share": 4.67,
-      "color": "#ff7043",
+      "color": "#FF8A50",
       "pos": [
         -1.3330000000000002,
         -1.1219999999999999,
@@ -142,7 +142,7 @@
       "parent": "Manufacturing and supplier management",
       "mentions": 1104,
       "share": 4.21,
-      "color": "#ff7043",
+      "color": "#FF8A50",
       "pos": [
         -3.3667,
         0.48750000000000004,
@@ -157,7 +157,7 @@
       "parent": "Financial and operational control",
       "mentions": 973,
       "share": 3.71,
-      "color": "#e0fd2c",
+      "color": "#FFB74D",
       "pos": [
         -4.9063,
         0.21149999999999997,
@@ -172,7 +172,7 @@
       "parent": "Financial and operational control",
       "mentions": 956,
       "share": 3.65,
-      "color": "#e0fd2c",
+      "color": "#FFB74D",
       "pos": [
         -5.7667,
         -1.8213,
@@ -187,7 +187,7 @@
       "parent": "Retail and distribution operations",
       "mentions": 866,
       "share": 3.3,
-      "color": "#4fc3f7",
+      "color": "#FF600A",
       "pos": [
         -5.2645,
         1.4541,
@@ -202,7 +202,7 @@
       "parent": "Packaging and compliance",
       "mentions": 825,
       "share": 3.15,
-      "color": "#66bb6a",
+      "color": "#FF7043",
       "pos": [
         -2.0538999999999996,
         2.3087999999999997,
@@ -217,7 +217,7 @@
       "parent": "Packaging and compliance",
       "mentions": 776,
       "share": 2.96,
-      "color": "#66bb6a",
+      "color": "#FF7043",
       "pos": [
         -5.640700000000001,
         1.8357,
@@ -232,7 +232,7 @@
       "parent": "Operational technology",
       "mentions": 403,
       "share": 1.54,
-      "color": "#26c6da",
+      "color": "#0055FF",
       "pos": [
         -1.6897000000000002,
         -0.2148,
@@ -247,7 +247,7 @@
       "parent": "Financial and operational control",
       "mentions": 185,
       "share": 0.71,
-      "color": "#e0fd2c",
+      "color": "#FFB74D",
       "pos": [
         -5.679399999999999,
         2.6502,
@@ -262,7 +262,7 @@
       "parent": "Design, brand, and consumer experience",
       "mentions": 93,
       "share": 24.6,
-      "color": "#e0fd2c",
+      "color": "#E0FD2C",
       "pos": [
         3.082,
         1.6395,
@@ -277,7 +277,7 @@
       "parent": "Retail and consumer performance",
       "mentions": 92,
       "share": 24.34,
-      "color": "#4fc3f7",
+      "color": "#C8E820",
       "pos": [
         2.5429,
         -2.8284,
@@ -292,7 +292,7 @@
       "parent": "Materials, sustainability, and end-of-life",
       "mentions": 84,
       "share": 22.22,
-      "color": "#66bb6a",
+      "color": "#66BB6A",
       "pos": [
         4.7149,
         1.2054,
@@ -307,7 +307,7 @@
       "parent": "Circular systems and recovery",
       "mentions": 42,
       "share": 11.11,
-      "color": "#26c6da",
+      "color": "#26C6DA",
       "pos": [
         4.3132,
         1.032,
@@ -322,7 +322,7 @@
       "parent": "Claims and compliance",
       "mentions": 34,
       "share": 8.99,
-      "color": "#ab47bc",
+      "color": "#B8C0D0",
       "pos": [
         5.1844,
         -2.2032000000000003,
@@ -337,7 +337,7 @@
       "parent": "Manufacturing and commercial execution",
       "mentions": 33,
       "share": 8.73,
-      "color": "#ff7043",
+      "color": "#D4E87A",
       "pos": [
         5.7751,
         -2.7168,
