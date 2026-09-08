@@ -17,19 +17,22 @@
   --line: rgba(80, 100, 140, 0.2);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: auto; }
-body { background: #040608; color: #d8dde8; font: 14px/1.5 Poppins, sans-serif; }
-canvas#scene { display: block; position: fixed; inset: 0; z-index: 0; }
+body { background: #040608; color: #d8dde8; font: 14px/1.5 Poppins, sans-serif; overflow-x: hidden; }
+#three-container { position: fixed; inset: 0; z-index: 0; }
+#three-container canvas { display: block; width: 100%; height: 100%; }
 
-.scroll-runway { position: relative; z-index: 1; pointer-events: none; }
+/* Scroll runway sits ABOVE the canvas and IS scrollable */
+.scroll-runway { position: relative; z-index: 2; pointer-events: none; }
 .scroll-runway .spacer { height: 100vh; }
 
-.hud { position: fixed; z-index: 10; pointer-events: none; }
+/* HUD overlays */
+.hud { position: fixed; z-index: 20; pointer-events: none; }
 .hud > * { pointer-events: auto; }
 
 .top-bar {
   top: 0; left: 0; right: 0; padding: 18px 28px;
   display: flex; justify-content: space-between; align-items: flex-start;
+  background: linear-gradient(to bottom, rgba(4,6,8,.85) 0%, transparent 100%);
 }
 .brand { display: flex; flex-direction: column; gap: 2px; }
 .brand .eyebrow { font: 600 10px Poppins; letter-spacing: .18em; text-transform: uppercase; transition: color .4s; }
@@ -56,10 +59,60 @@ body.theme-agency .brand .eyebrow { color: var(--accent-a); -webkit-text-fill-co
 body.theme-pac .btn.active[data-arm="Pac"] { background: var(--accent-p); border-color: var(--accent-p); color: var(--navy); }
 body.theme-pac .brand .eyebrow { color: var(--accent-p); -webkit-text-fill-color: var(--accent-p); background: none; }
 
+/* Floating topic labels (CSS2D) */
+.topic-label {
+  pointer-events: auto;
+  cursor: pointer;
+  text-align: center;
+  transition: opacity .3s, transform .3s;
+}
+.topic-label .label-card {
+  display: inline-block;
+  background: rgba(8, 10, 18, 0.85);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  padding: 6px 14px 5px;
+  backdrop-filter: blur(8px);
+  max-width: 240px;
+}
+.topic-label:hover .label-card {
+  border-color: rgba(255,255,255,.45);
+  background: rgba(12, 14, 26, 0.95);
+}
+.topic-label .label-text {
+  font: 600 11px/1.3 Poppins;
+  color: #e8ecf4;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 216px;
+}
+.topic-label .label-arm {
+  font: 500 9px DM Mono;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-top: 2px;
+}
+.topic-label .label-arm.agency { background: rgba(255,96,10,.2); color: #FF600A; }
+.topic-label .label-arm.pac { background: rgba(224,253,44,.15); color: #E0FD2C; }
+.topic-label .label-count {
+  font: 400 9px DM Mono;
+  color: rgba(255,255,255,.3);
+  margin-top: 1px;
+  display: block;
+}
+.topic-label.dimmed { opacity: 0.15; }
+.topic-label.hidden { display: none; }
+
+/* Info panel */
 .info-panel {
   position: fixed; right: 24px; top: 70px; bottom: 24px; width: 380px;
   background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
-  backdrop-filter: blur(20px); overflow-y: auto; z-index: 15;
+  backdrop-filter: blur(20px); overflow-y: auto; z-index: 25;
   padding: 24px; display: none; flex-direction: column; gap: 14px;
 }
 .info-panel.open { display: flex; }
@@ -81,8 +134,9 @@ body.theme-pac .info-panel .stat strong { color: var(--accent-p); }
 body.theme-all .info-panel .quote-card a, body.theme-agency .info-panel .quote-card a { color: var(--accent-a); }
 body.theme-pac .info-panel .quote-card a { color: var(--accent-p); }
 
+/* Legend */
 .legend {
-  position: fixed; left: 24px; bottom: 24px; z-index: 10;
+  position: fixed; left: 24px; bottom: 24px; z-index: 20;
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
   padding: 14px 18px; backdrop-filter: blur(15px);
 }
@@ -91,71 +145,42 @@ body.theme-pac .info-panel .quote-card a { color: var(--accent-p); }
 .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #a0aab8; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
-.scroll-progress {
-  position: fixed; right: 18px; top: 50%; transform: translateY(-50%);
-  z-index: 12; display: flex; flex-direction: column; gap: 5px; pointer-events: auto;
+/* Progress rail */
+.progress-rail {
+  position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+  z-index: 22; display: flex; flex-direction: column; gap: 5px;
+  pointer-events: auto;
 }
-.scroll-dot {
+.rail-dot {
   width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.12);
   border: 1px solid rgba(255,255,255,.18); cursor: pointer; transition: all .25s; position: relative;
 }
-.scroll-dot.active { transform: scale(1.5); }
-body.theme-all .scroll-dot.active, body.theme-agency .scroll-dot.active { background: var(--accent-a); border-color: var(--accent-a); }
-body.theme-pac .scroll-dot.active { background: var(--accent-p); border-color: var(--accent-p); }
-.scroll-dot .tip {
+.rail-dot.active { transform: scale(1.5); }
+body.theme-all .rail-dot.active, body.theme-agency .rail-dot.active { background: var(--accent-a); border-color: var(--accent-a); }
+body.theme-pac .rail-dot.active { background: var(--accent-p); border-color: var(--accent-p); }
+.rail-dot .tip {
   position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
   font: 500 10px DM Mono; color: #c9d1df; white-space: nowrap; background: var(--panel);
   padding: 3px 8px; border-radius: 5px; border: 1px solid var(--line);
   opacity: 0; pointer-events: none; transition: opacity .2s;
 }
-.scroll-dot:hover .tip { opacity: 1; }
+.rail-dot:hover .tip { opacity: 1; }
 
-/* Floating subject cards above clusters */
-.topic-card {
-  pointer-events: auto; cursor: pointer;
-  background: rgba(10, 12, 20, 0.82);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 8px;
-  padding: 6px 12px 5px;
-  backdrop-filter: blur(8px);
-  white-space: nowrap;
-  transform: translateX(-50%);
-  transition: border-color .2s, background .2s;
-  max-width: 260px;
-  text-align: center;
+/* Current topic label at bottom center */
+.current-topic {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 22;
+  text-align: center; transition: opacity .4s;
+  pointer-events: none;
 }
-.topic-card:hover {
-  border-color: rgba(255,255,255,.4);
-  background: rgba(14, 16, 28, 0.94);
-}
-.topic-card .card-label {
-  font: 600 11px/1.3 Poppins, sans-serif;
-  color: #e0e4ec;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
-  max-width: 236px;
-}
-.topic-card .card-arm {
-  font: 500 9px DM Mono, monospace;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  margin-top: 2px;
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 3px;
-}
-.topic-card .card-arm.agency { background: rgba(255,96,10,.2); color: #FF600A; }
-.topic-card .card-arm.pac { background: rgba(224,253,44,.15); color: #E0FD2C; }
-.topic-card .card-mentions {
-  font: 400 9px DM Mono, monospace;
-  color: rgba(255,255,255,.35);
-  margin-top: 1px;
-}
+.current-topic.hidden { opacity: 0; }
+.current-topic .ct-num { font: 600 10px DM Mono; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.current-topic .ct-title { font: 700 20px/1.2 Poppins; color: white; text-shadow: 0 2px 20px rgba(0,0,0,.8); max-width: 540px; }
+body.theme-pac .current-topic .ct-title { font-family: 'DM Serif Display', serif; font-weight: 400; }
+.current-topic .ct-meta { font: 12px DM Mono; color: var(--muted); margin-top: 4px; }
 
+/* Scroll prompt */
 .scroll-prompt {
-  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 12;
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 22;
   font: 500 12px Poppins; color: var(--muted); background: var(--panel); border: 1px solid var(--line);
   border-radius: 50px; padding: 10px 22px; backdrop-filter: blur(10px);
   transition: opacity .5s; display: flex; align-items: center; gap: 8px;
@@ -171,7 +196,8 @@ body.theme-pac .scroll-dot.active { background: var(--accent-p); border-color: v
 
 @media (max-width: 768px) {
   .info-panel { left: 12px; right: 12px; width: auto; top: auto; bottom: 0; max-height: 55vh; border-radius: 16px 16px 0 0; }
-  .legend, .scroll-progress { display: none; }
+  .legend, .progress-rail { display: none; }
+  .current-topic .ct-title { font-size: 16px; max-width: 80vw; }
 }
 </style>
 </head>
@@ -199,12 +225,19 @@ body.theme-pac .scroll-dot.active { background: var(--accent-p); border-color: v
 </div>
 
 <div class="legend" id="legend"></div>
-<div class="scroll-progress" id="scrollProgress"></div>
+<div class="progress-rail" id="progressRail"></div>
+
+<div class="current-topic hidden" id="currentTopic">
+  <div class="ct-num" id="ctNum"></div>
+  <div class="ct-title" id="ctTitle"></div>
+  <div class="ct-meta" id="ctMeta"></div>
+</div>
+
 <div class="scroll-prompt" id="scrollPrompt">
   <span class="scroll-arrow">&#8595;</span> Scroll to explore topics
 </div>
 
-<canvas id="scene"></canvas>
+<div id="three-container"></div>
 <div class="scroll-runway" id="scrollRunway"></div>
 
 <script type="importmap">
@@ -222,13 +255,14 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-const canvas = document.getElementById('scene');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const container = document.getElementById('three-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.setClearColor(0x040608, 1);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x040608, 0.022);
@@ -236,28 +270,35 @@ scene.fog = new THREE.FogExp2(0x040608, 0.022);
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 250);
 camera.position.set(0, 3, 16);
 
-const controls = new OrbitControls(camera, canvas);
+const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.maxDistance = 50;
 controls.minDistance = 3;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.25;
+controls.enableZoom = true;
+// Disable scroll-wheel zoom so scrolling drives the topic tour instead
+controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+// Remove wheel from orbit controls — we handle it via page scroll
+controls.enableZoom = false;
 
-// Bloom
+// Bloom post-processing
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.6, 0.4, 0.85);
 composer.addPass(bloom);
 
-// CSS2D label renderer (overlays HTML labels on the 3D scene)
+// CSS2D label renderer
 const labelRenderer = new CSS2DRenderer();
 labelRenderer.setSize(innerWidth, innerHeight);
 labelRenderer.domElement.style.position = 'fixed';
 labelRenderer.domElement.style.top = '0';
 labelRenderer.domElement.style.left = '0';
-labelRenderer.domElement.style.pointerEvents = 'none';
 labelRenderer.domElement.style.zIndex = '5';
+labelRenderer.domElement.style.pointerEvents = 'none';
+labelRenderer.domElement.style.overflow = 'visible';
 document.body.appendChild(labelRenderer.domElement);
 
 // Lighting
@@ -266,7 +307,7 @@ const dirLight = new THREE.DirectionalLight(0xffffff, 0.25);
 dirLight.position.set(5, 12, 7);
 scene.add(dirLight);
 
-// ── Gaussian splat texture ──
+// Gaussian splat texture
 function createSplatTexture(size = 128) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
@@ -290,10 +331,12 @@ function gaussRand() {
   return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) * 0.33 + 0.5;
 }
 
-// ── Load data and build topic clusters at original positions ──
+// Load data
 const data = await fetch('data.json').then(r => r.json());
 
+// Build topic clusters
 const nodeObjects = [];
+const labelObjects = [];
 const nodeGroup = new THREE.Group();
 scene.add(nodeGroup);
 
@@ -365,6 +408,7 @@ for (const node of data.nodes) {
   nodeGroup.add(points);
   nodeObjects.push(points);
 
+  // Core glow
   const glowGeo = new THREE.SphereGeometry(node.radius * 0.12, 16, 16);
   const glowMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55 });
   const glow = new THREE.Mesh(glowGeo, glowMat);
@@ -372,23 +416,25 @@ for (const node of data.nodes) {
   glow.userData = { nodeRef: node.id };
   nodeGroup.add(glow);
 
-  // Floating subject card above the cluster
-  const cardEl = document.createElement('div');
-  cardEl.className = 'topic-card';
-  cardEl.dataset.arm = node.arm;
-  const shortLabel = node.label.length > 42 ? node.label.slice(0, 40) + '...' : node.label;
-  cardEl.innerHTML = `<span class="card-label">${shortLabel}</span><span class="card-arm ${node.arm.toLowerCase()}">${node.arm}</span><span class="card-mentions">${node.mentions.toLocaleString()}</span>`;
-  cardEl.addEventListener('click', () => {
+  // Floating subject card (CSS2D label)
+  const el = document.createElement('div');
+  el.className = 'topic-label';
+  el.dataset.arm = node.arm;
+  const shortLabel = node.label.length > 38 ? node.label.slice(0, 36) + '…' : node.label;
+  el.innerHTML = `<div class="label-card"><span class="label-text">${shortLabel}</span><span class="label-arm ${node.arm.toLowerCase()}">${node.arm}</span><span class="label-count">${node.mentions.toLocaleString()} mentions</span></div>`;
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
     selectNode(points, false);
     controls.autoRotate = false;
   });
-  const labelObj = new CSS2DObject(cardEl);
-  labelObj.position.set(0, node.radius + 0.6, 0);
-  labelObj.userData = { arm: node.arm };
-  points.add(labelObj);
+  const labelObj = new CSS2DObject(el);
+  labelObj.position.set(node.pos[0], node.pos[1] + node.radius + 0.5, node.pos[2]);
+  labelObj.userData = { arm: node.arm, nodeId: node.id };
+  scene.add(labelObj);
+  labelObjects.push({ obj: labelObj, el, arm: node.arm, nodeId: node.id });
 }
 
-// ── Co-occurrence edges ──
+// Co-occurrence edges
 const edgeGroup = new THREE.Group();
 scene.add(edgeGroup);
 const nodeById = {};
@@ -410,27 +456,20 @@ for (const edge of data.edges) {
   })));
 }
 
-// ── Dot-rendered enclosure structure ──
-// Compute the bounding box of all nodes to size the structure
+// Dot-rendered enclosure
 const bbox = new THREE.Box3();
-for (const obj of nodeObjects) {
-  bbox.expandByPoint(new THREE.Vector3(...obj.userData.pos));
-}
-const center = new THREE.Vector3();
-bbox.getCenter(center);
-const bsize = new THREE.Vector3();
-bbox.getSize(bsize);
+for (const obj of nodeObjects) bbox.expandByPoint(new THREE.Vector3(...obj.userData.pos));
+const center = new THREE.Vector3(); bbox.getCenter(center);
+const bsize = new THREE.Vector3(); bbox.getSize(bsize);
 const pad = 5;
-const hw = bsize.x / 2 + pad;
-const hh = bsize.y / 2 + pad + 2;
-const hd = bsize.z / 2 + pad;
+const hw = bsize.x / 2 + pad, hh = bsize.y / 2 + pad + 2, hd = bsize.z / 2 + pad;
 const cx = center.x, cy = center.y, cz = center.z;
 
-function makeStructuralDots(positions, color, ptSize, ptOpacity) {
+function makeStructuralDots(pts, color, ptSize, ptOpacity) {
   const geo = new THREE.BufferGeometry();
-  const posArr = new Float32Array(positions.length * 3);
-  positions.forEach((p, i) => { posArr[i*3] = p[0]; posArr[i*3+1] = p[1]; posArr[i*3+2] = p[2]; });
-  geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+  const arr = new Float32Array(pts.length * 3);
+  pts.forEach((p, i) => { arr[i*3] = p[0]; arr[i*3+1] = p[1]; arr[i*3+2] = p[2]; });
+  geo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
   return new THREE.Points(geo, new THREE.PointsMaterial({
     color, size: ptSize, transparent: true, opacity: ptOpacity,
     map: splatTex, blending: THREE.AdditiveBlending, depthWrite: false
@@ -440,91 +479,49 @@ function makeStructuralDots(positions, color, ptSize, ptOpacity) {
 const structureGroup = new THREE.Group();
 scene.add(structureGroup);
 
-// Floor grid dots
+// Floor
 const floorDots = [];
-const floorSpacing = 1.2;
-for (let x = cx - hw; x <= cx + hw; x += floorSpacing) {
-  for (let z = cz - hd; z <= cz + hd; z += floorSpacing) {
-    floorDots.push([x, cy - hh + 0.2, z]);
-  }
-}
+for (let x = cx-hw; x <= cx+hw; x += 1.2) for (let z = cz-hd; z <= cz+hd; z += 1.2) floorDots.push([x, cy-hh+0.2, z]);
 structureGroup.add(makeStructuralDots(floorDots, 0x1a1a2e, 0.06, 0.25));
 
-// Ceiling grid dots (sparser)
+// Ceiling
 const ceilDots = [];
-for (let x = cx - hw; x <= cx + hw; x += floorSpacing * 2) {
-  for (let z = cz - hd; z <= cz + hd; z += floorSpacing * 2) {
-    ceilDots.push([x, cy + hh, z]);
-  }
-}
+for (let x = cx-hw; x <= cx+hw; x += 2.4) for (let z = cz-hd; z <= cz+hd; z += 2.4) ceilDots.push([x, cy+hh, z]);
 structureGroup.add(makeStructuralDots(ceilDots, 0x14142a, 0.05, 0.15));
 
-// Wall dots — four walls
+// Walls
 const wallDots = [];
-const wallSpacing = 1.0;
-// Left and right walls
-for (let y = cy - hh; y <= cy + hh; y += wallSpacing) {
-  for (let z = cz - hd; z <= cz + hd; z += wallSpacing) {
-    wallDots.push([cx - hw, y, z]);
-    wallDots.push([cx + hw, y, z]);
-  }
-}
-// Front and back walls
-for (let y = cy - hh; y <= cy + hh; y += wallSpacing) {
-  for (let x = cx - hw; x <= cx + hw; x += wallSpacing) {
-    wallDots.push([x, y, cz - hd]);
-    wallDots.push([x, y, cz + hd]);
-  }
+for (let y = cy-hh; y <= cy+hh; y += 1) {
+  for (let z = cz-hd; z <= cz+hd; z += 1) { wallDots.push([cx-hw, y, z]); wallDots.push([cx+hw, y, z]); }
+  for (let x = cx-hw; x <= cx+hw; x += 1) { wallDots.push([x, y, cz-hd]); wallDots.push([x, y, cz+hd]); }
 }
 structureGroup.add(makeStructuralDots(wallDots, 0x12122a, 0.04, 0.12));
 
-// Vertical columns at corners + midpoints
-const columnDots = [];
-const colPositions = [
-  [cx - hw, cz - hd], [cx + hw, cz - hd], [cx - hw, cz + hd], [cx + hw, cz + hd],
-  [cx, cz - hd], [cx, cz + hd], [cx - hw, cz], [cx + hw, cz],
-];
-for (const [colX, colZ] of colPositions) {
-  for (let y = cy - hh; y <= cy + hh; y += 0.3) {
-    columnDots.push([colX, y, colZ]);
-  }
+// Columns
+const colDots = [];
+for (const [colX, colZ] of [[cx-hw,cz-hd],[cx+hw,cz-hd],[cx-hw,cz+hd],[cx+hw,cz+hd],[cx,cz-hd],[cx,cz+hd],[cx-hw,cz],[cx+hw,cz]]) {
+  for (let y = cy-hh; y <= cy+hh; y += 0.3) colDots.push([colX, y, colZ]);
 }
-structureGroup.add(makeStructuralDots(columnDots, 0x2a2a4a, 0.08, 0.3));
+structureGroup.add(makeStructuralDots(colDots, 0x2a2a4a, 0.08, 0.3));
 
-// Overhead beams (horizontal lines of dots along X at ceiling)
+// Beams
 const beamDots = [];
-for (let z = cz - hd; z <= cz + hd; z += 3) {
-  for (let x = cx - hw; x <= cx + hw; x += 0.4) {
-    beamDots.push([x, cy + hh - 0.1, z]);
-  }
-}
+for (let z = cz-hd; z <= cz+hd; z += 3) for (let x = cx-hw; x <= cx+hw; x += 0.4) beamDots.push([x, cy+hh-0.1, z]);
 structureGroup.add(makeStructuralDots(beamDots, 0x20204a, 0.06, 0.2));
 
-// Cross-braces at intervals — diagonal dot lines
-const braceDots = [];
-for (let z = cz - hd; z <= cz + hd; z += 6) {
-  const steps = 30;
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    braceDots.push([cx - hw, cy - hh + t * (2 * hh), z + t * 2 - 1]);
-    braceDots.push([cx + hw, cy - hh + t * (2 * hh), z - t * 2 + 1]);
-  }
-}
-structureGroup.add(makeStructuralDots(braceDots, 0x1e1e3e, 0.05, 0.18));
-
-// Atmospheric dust inside the enclosure
+// Dust
 const dustCount = 4000;
 const dustGeo = new THREE.BufferGeometry();
 const dustPos = new Float32Array(dustCount * 3);
 for (let i = 0; i < dustCount; i++) {
-  dustPos[i * 3]     = cx + (Math.random() - 0.5) * 2 * hw;
-  dustPos[i * 3 + 1] = cy - hh + Math.random() * 2 * hh;
-  dustPos[i * 3 + 2] = cz + (Math.random() - 0.5) * 2 * hd;
+  dustPos[i*3] = cx + (Math.random()-0.5)*2*hw;
+  dustPos[i*3+1] = cy - hh + Math.random()*2*hh;
+  dustPos[i*3+2] = cz + (Math.random()-0.5)*2*hd;
 }
 dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
 scene.add(new THREE.Points(dustGeo, new THREE.PointsMaterial({
-  color: 0x2a2a4a, size: 0.025, transparent: true, opacity: 0.3, map: splatTex,
-  blending: THREE.AdditiveBlending, depthWrite: false
+  color: 0x2a2a4a, size: 0.025, transparent: true, opacity: 0.3,
+  map: splatTex, blending: THREE.AdditiveBlending, depthWrite: false
 })));
 
 // ── Scroll-driven topic tour ──
@@ -536,82 +533,95 @@ for (let i = 0; i < sortedNodes.length + 2; i++) {
   runway.appendChild(div);
 }
 
-const progressEl = document.getElementById('scrollProgress');
+// Progress rail
+const railEl = document.getElementById('progressRail');
 sortedNodes.forEach((node, i) => {
   const dot = document.createElement('div');
-  dot.className = 'scroll-dot';
+  dot.className = 'rail-dot';
   const tip = document.createElement('span');
   tip.className = 'tip';
-  tip.textContent = node.label.length > 38 ? node.label.slice(0, 36) + '...' : node.label;
+  tip.textContent = node.label.length > 36 ? node.label.slice(0, 34) + '…' : node.label;
   dot.appendChild(tip);
   dot.addEventListener('click', () => {
     const frac = (i + 1) / (sortedNodes.length + 1);
     window.scrollTo({ top: frac * (document.body.scrollHeight - innerHeight), behavior: 'smooth' });
   });
-  progressEl.appendChild(dot);
+  railEl.appendChild(dot);
 });
 
-let scrollTopicIdx = -1;
+let activeTopicIdx = -1;
 
-function updateScrollTour() {
-  const scrollFrac = window.scrollY / Math.max(1, document.body.scrollHeight - innerHeight);
-  const rawIdx = Math.round(scrollFrac * (sortedNodes.length + 1)) - 1;
+const ctEl = document.getElementById('currentTopic');
+const ctNum = document.getElementById('ctNum');
+const ctTitle = document.getElementById('ctTitle');
+const ctMeta = document.getElementById('ctMeta');
+const promptEl = document.getElementById('scrollPrompt');
+
+function onScroll() {
+  const scrollMax = document.body.scrollHeight - innerHeight;
+  if (scrollMax <= 0) return;
+  const frac = window.scrollY / scrollMax;
+  const rawIdx = Math.round(frac * (sortedNodes.length + 1)) - 1;
   const idx = Math.max(-1, Math.min(sortedNodes.length - 1, rawIdx));
 
-  if (idx !== scrollTopicIdx) {
-    scrollTopicIdx = idx;
+  if (idx !== activeTopicIdx) {
+    activeTopicIdx = idx;
     controls.autoRotate = idx < 0;
 
-    progressEl.querySelectorAll('.scroll-dot').forEach((dot, i) => {
-      dot.classList.toggle('active', i === idx);
-    });
+    railEl.querySelectorAll('.rail-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
 
-    if (idx >= 0 && idx < sortedNodes.length) {
+    if (idx >= 0) {
       const node = sortedNodes[idx];
       const obj = nodeObjects.find(o => o.userData.id === node.id);
       if (obj) {
         selectNode(obj, true);
-        document.getElementById('scrollPrompt').classList.add('hidden');
+        promptEl.classList.add('hidden');
+
+        ctNum.textContent = `Station ${idx + 1} of ${sortedNodes.length}`;
+        ctTitle.textContent = node.label;
+        ctMeta.textContent = `${node.arm} · ${node.mentions.toLocaleString()} mentions · ${node.share}% share`;
+        ctEl.classList.remove('hidden');
       }
     } else {
       deselectNode();
-      if (idx < 0) animateCamera(new THREE.Vector3(0, 3, 16), new THREE.Vector3(0, 0, 0));
+      ctEl.classList.add('hidden');
+      animateCamera(new THREE.Vector3(0, 3, 16), new THREE.Vector3(0, 0, 0));
     }
   }
 }
 
-window.addEventListener('scroll', updateScrollTour, { passive: true });
+window.addEventListener('scroll', onScroll, { passive: true });
 
-// ── Click and hover interaction ──
+// ── Click and hover ──
 const raycaster = new THREE.Raycaster();
 raycaster.params.Points.threshold = 0.5;
 const mouse = new THREE.Vector2();
 let selectedNode = null;
 
-canvas.addEventListener('click', (e) => {
+renderer.domElement.addEventListener('click', (e) => {
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(nodeObjects);
-  if (intersects.length > 0) {
-    selectNode(intersects[0].object, false);
+  const hits = raycaster.intersectObjects(nodeObjects);
+  if (hits.length > 0) {
+    selectNode(hits[0].object, false);
     controls.autoRotate = false;
   } else {
     deselectNode();
   }
 });
 
-canvas.addEventListener('mousemove', (e) => {
+renderer.domElement.addEventListener('mousemove', (e) => {
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(nodeObjects);
-  canvas.style.cursor = intersects.length > 0 ? 'pointer' : 'grab';
+  const hits = raycaster.intersectObjects(nodeObjects);
+  renderer.domElement.style.cursor = hits.length > 0 ? 'pointer' : 'grab';
   for (const obj of nodeObjects) {
-    const isHovered = intersects.length > 0 && intersects[0].object === obj;
+    const h = hits.length > 0 && hits[0].object === obj;
     obj.material.uniforms.highlight.value = THREE.MathUtils.lerp(
       obj.material.uniforms.highlight.value,
-      isHovered || (selectedNode === obj) ? 1.0 : 0.0, 0.15
+      h || (selectedNode === obj) ? 1.0 : 0.0, 0.15
     );
   }
 });
@@ -640,19 +650,24 @@ function selectNode(obj, fromScroll) {
     html += `<div class="connections"><h3 style="font-size:13px;color:${accentVar};margin-bottom:6px;">Connected topics</h3>`;
     for (const conn of connections) {
       const otherId = conn.source === node.id ? conn.target : conn.source;
-      const otherNode = data.nodes.find(n => n.id === otherId);
-      if (otherNode) html += `<div class="conn-item">${otherNode.label} <span style="float:right;color:${accentVar}">${conn.weight.toLocaleString()}</span></div>`;
+      const other = data.nodes.find(n => n.id === otherId);
+      if (other) html += `<div class="conn-item">${other.label} <span style="float:right;color:${accentVar}">${conn.weight.toLocaleString()}</span></div>`;
     }
     html += `</div>`;
   }
   if (nodeQuotes.length > 0) {
     html += `<h3 style="font-size:13px;color:${accentVar};margin-top:16px;">Related quotes</h3>`;
     for (const q of nodeQuotes) {
-      html += `<div class="quote-card"><blockquote>"${q.text}"</blockquote><div class="attr"><strong>${q.speaker}</strong> &middot; ${q.title} &middot; ${q.company}<br>${q.podcast} &middot; <a href="${q.url}" target="_blank" rel="noopener">${q.episode}</a></div></div>`;
+      html += `<div class="quote-card"><blockquote>&ldquo;${q.text}&rdquo;</blockquote><div class="attr"><strong>${q.speaker}</strong> &middot; ${q.title} &middot; ${q.company}<br>${q.podcast} &middot; <a href="${q.url}" target="_blank" rel="noopener">${q.episode}</a></div></div>`;
     }
   }
   document.getElementById('panelContent').innerHTML = html;
   document.getElementById('infoPanel').classList.add('open');
+
+  // Dim non-selected labels
+  for (const lo of labelObjects) {
+    lo.el.classList.toggle('dimmed', lo.nodeId !== node.id);
+  }
 
   const target = new THREE.Vector3(...node.pos);
   const offset = new THREE.Vector3(2, 1.5, 3).normalize().multiplyScalar(4);
@@ -663,11 +678,12 @@ function deselectNode() {
   selectedNode = null;
   document.getElementById('infoPanel').classList.remove('open');
   for (const obj of nodeObjects) obj.material.uniforms.highlight.value = 0;
+  for (const lo of labelObjects) lo.el.classList.remove('dimmed');
 }
 
 document.getElementById('closePanel').addEventListener('click', deselectNode);
 
-// ── Camera animation ──
+// Camera animation
 let cameraAnimation = null;
 function animateCamera(targetPos, lookAt) {
   cameraAnimation = {
@@ -680,13 +696,6 @@ function animateCamera(targetPos, lookAt) {
 // ── Arm filter + theming ──
 let currentArm = 'all';
 
-// Structure tint color stored per arm
-const structureTints = {
-  all: 0x1a1a2e,
-  Agency: 0x1a1008,
-  Pac: 0x0a1a0c,
-};
-
 function setArm(arm) {
   currentArm = arm;
   document.querySelectorAll('.btn[data-arm]').forEach(b => b.classList.remove('active'));
@@ -694,30 +703,26 @@ function setArm(arm) {
   document.body.className = arm === 'all' ? 'theme-all' : arm === 'Agency' ? 'theme-agency' : 'theme-pac';
 
   for (const obj of nodeObjects) {
-    const show = arm === 'all' || obj.userData.arm === arm;
-    obj.visible = show;
-    // Also toggle label visibility
-    obj.traverse(child => {
-      if (child.isCSS2DObject) child.visible = show;
-    });
+    obj.visible = arm === 'all' || obj.userData.arm === arm;
+  }
+  for (const lo of labelObjects) {
+    const show = arm === 'all' || lo.arm === arm;
+    lo.el.classList.toggle('hidden', !show);
+    lo.obj.visible = show;
   }
   for (const line of edgeGroup.children) {
     const src = nodeById[line.userData.source];
     const tgt = nodeById[line.userData.target];
-    line.visible = src?.visible && tgt?.visible;
+    line.visible = (src ? src.visible : false) && (tgt ? tgt.visible : false);
   }
 
-  // Theme-specific atmosphere
   const fogColor = arm === 'Agency' ? 0x0c0806 : arm === 'Pac' ? 0x030a08 : 0x040608;
   scene.fog = new THREE.FogExp2(fogColor, 0.022);
   renderer.setClearColor(fogColor, 1);
 
-  // Tint the structure dots
-  const tint = new THREE.Color(structureTints[arm] || structureTints.all);
+  const tint = arm === 'Agency' ? 0x1a1008 : arm === 'Pac' ? 0x0a1a0c : 0x1a1a2e;
   structureGroup.traverse(child => {
-    if (child.isPoints && child.material.color) {
-      child.material.color.copy(tint);
-    }
+    if (child.isPoints && child.material.color) child.material.color.set(tint);
   });
 
   deselectNode();
@@ -751,7 +756,6 @@ function updateLegend(arm) {
     'Pac — Materials': '#66BB6A',
     'Pac — Retail fit': '#C8E820',
   };
-
   let html = '<h3>Topic families</h3><div class="legend-items">';
   for (const [label, color] of Object.entries(legends)) {
     html += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${label}</div>`;
@@ -773,11 +777,10 @@ function animate() {
     obj.position.y = base[1] + Math.sin(t * 0.3 + base[0]) * 0.08;
   }
 
-  // Gentle dust drift
   const dAttr = dustGeo.getAttribute('position');
   for (let i = 0; i < dustCount; i++) {
-    dAttr.array[i * 3 + 1] += Math.sin(t * 0.2 + i * 0.1) * 0.0003;
-    if (dAttr.array[i * 3 + 1] > cy + hh) dAttr.array[i * 3 + 1] = cy - hh;
+    dAttr.array[i*3+1] += Math.sin(t * 0.2 + i * 0.1) * 0.0003;
+    if (dAttr.array[i*3+1] > cy + hh) dAttr.array[i*3+1] = cy - hh;
   }
   dAttr.needsUpdate = true;
 
