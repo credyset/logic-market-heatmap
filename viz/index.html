@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logic Market Heatmap — 3D Gaussian Splat Visualization</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root {
+  --ink: #050d1f;
+  --paper: #020810;
+  --accent: #e0fd2c;
+  --muted: #596579;
+  --panel: rgba(12, 20, 40, 0.92);
+  --line: rgba(80, 100, 140, 0.25);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--paper); color: #d8dde8; font: 14px/1.5 Manrope, sans-serif; overflow: hidden; }
+canvas { display: block; position: fixed; inset: 0; z-index: 0; }
+
+/* HUD overlay */
+.hud { position: fixed; z-index: 10; pointer-events: none; }
+.hud > * { pointer-events: auto; }
+
+.top-bar {
+  top: 0; left: 0; right: 0; padding: 20px 28px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.brand { display: flex; flex-direction: column; gap: 4px; }
+.brand .eyebrow { font: 500 10px DM Mono; letter-spacing: .18em; color: var(--accent); text-transform: uppercase; }
+.brand h1 { font-size: 28px; letter-spacing: -.04em; line-height: 1; color: white; }
+.brand .sub { font: 12px DM Mono; color: var(--muted); margin-top: 4px; }
+
+.controls {
+  display: flex; gap: 8px; align-items: center;
+}
+.btn {
+  font: 500 11px DM Mono; text-transform: uppercase; letter-spacing: .06em;
+  padding: 8px 14px; border-radius: 99px; border: 1px solid var(--line);
+  background: var(--panel); color: #c9d1df; cursor: pointer;
+  transition: all .15s;
+}
+.btn:hover, .btn.active { border-color: var(--accent); color: var(--accent); }
+
+/* Info panel */
+.info-panel {
+  position: fixed; right: 24px; top: 80px; bottom: 24px; width: 380px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  backdrop-filter: blur(20px); overflow-y: auto; z-index: 15;
+  padding: 24px; display: none; flex-direction: column; gap: 16px;
+}
+.info-panel.open { display: flex; }
+.info-panel .close-btn {
+  position: absolute; top: 12px; right: 12px; background: none; border: none;
+  color: var(--muted); font-size: 20px; cursor: pointer; padding: 6px;
+}
+.info-panel .close-btn:hover { color: white; }
+.info-panel h2 { font-size: 20px; letter-spacing: -.03em; color: white; padding-right: 30px; }
+.info-panel .meta { font: 11px DM Mono; color: var(--muted); }
+.info-panel .stat-row { display: flex; gap: 16px; }
+.info-panel .stat { flex: 1; background: rgba(255,255,255,.04); border-radius: 10px; padding: 12px; }
+.info-panel .stat strong { display: block; font-size: 22px; color: var(--accent); }
+.info-panel .stat span { font: 10px DM Mono; color: var(--muted); text-transform: uppercase; }
+.info-panel .connections { margin-top: 8px; }
+.info-panel .conn-item { font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); color: #a0aab8; }
+.info-panel .quote-card {
+  background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px; margin-top: 6px;
+}
+.info-panel .quote-card blockquote { font-size: 14px; line-height: 1.5; color: #e0e4ec; margin: 0 0 8px; font-style: italic; }
+.info-panel .quote-card .attr { font: 10px DM Mono; color: var(--muted); }
+.info-panel .quote-card a { color: var(--accent); text-decoration: none; }
+
+/* Legend */
+.legend {
+  position: fixed; left: 24px; bottom: 24px; z-index: 10;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px 18px; backdrop-filter: blur(15px);
+}
+.legend h3 { font: 500 10px DM Mono; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 8px; }
+.legend-items { display: flex; flex-direction: column; gap: 4px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #a0aab8; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* Help tooltip */
+.help-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10;
+  font: 11px DM Mono; color: var(--muted); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 99px; padding: 8px 18px; backdrop-filter: blur(10px);
+  transition: opacity .5s; opacity: 1;
+}
+.help-toast.hidden { opacity: 0; pointer-events: none; }
+
+/* Loading */
+.loading {
+  position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+  background: var(--paper); transition: opacity .6s;
+}
+.loading.done { opacity: 0; pointer-events: none; }
+.loading .spinner { width: 40px; height: 40px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+  .info-panel { left: 12px; right: 12px; width: auto; top: auto; bottom: 0; max-height: 55vh; border-radius: 16px 16px 0 0; }
+  .legend { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading"><div class="spinner"></div></div>
+
+<div class="hud top-bar">
+  <div class="brand">
+    <span class="eyebrow">Logic Inc</span>
+    <h1>Market Heatmap</h1>
+    <span class="sub">Gaussian splat topic explorer</span>
+  </div>
+  <div class="controls">
+    <button class="btn active" data-arm="all">All</button>
+    <button class="btn" data-arm="Agency">Agency</button>
+    <button class="btn" data-arm="Pac">Pac</button>
+    <a href="../" class="btn">Table view</a>
+  </div>
+</div>
+
+<div class="info-panel" id="infoPanel">
+  <button class="close-btn" id="closePanel">&times;</button>
+  <div id="panelContent"></div>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div class="help-toast" id="helpToast">Click a topic cluster to explore. Scroll to zoom. Drag to orbit.</div>
+
+<canvas id="scene"></canvas>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(0x020810, 1);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x020810, 0.04);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 200);
+camera.position.set(0, 3, 14);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.maxDistance = 40;
+controls.minDistance = 3;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.3;
+
+// Lighting
+scene.add(new THREE.AmbientLight(0x1a2035, 0.4));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.3);
+dirLight.position.set(5, 10, 7);
+scene.add(dirLight);
+
+// Gaussian splat particle texture
+function createSplatTexture(size = 128) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.15, 'rgba(255,255,255,0.8)');
+  grad.addColorStop(0.4, 'rgba(255,255,255,0.25)');
+  grad.addColorStop(0.7, 'rgba(255,255,255,0.05)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+const splatTex = createSplatTexture();
+
+// Load data
+const data = await fetch('data.json').then(r => r.json());
+
+// Build node objects
+const nodeObjects = [];
+const nodeGroup = new THREE.Group();
+scene.add(nodeGroup);
+
+function hexToVec3(hex) {
+  const c = new THREE.Color(hex);
+  return c;
+}
+
+for (const node of data.nodes) {
+  const color = hexToVec3(node.color);
+  const count = Math.max(30, Math.round(node.radius * 300));
+
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const opacities = new Float32Array(count);
+
+  for (let i = 0; i < count; i++) {
+    // Gaussian distribution around center
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = node.radius * (0.3 + Math.random() * 0.7) * gaussianRandom();
+    positions[i * 3]     = Math.sin(phi) * Math.cos(theta) * r;
+    positions[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * r;
+    positions[i * 3 + 2] = Math.cos(phi) * r;
+
+    const brightness = 0.6 + Math.random() * 0.4;
+    colors[i * 3]     = color.r * brightness;
+    colors[i * 3 + 1] = color.g * brightness;
+    colors[i * 3 + 2] = color.b * brightness;
+
+    sizes[i] = (0.08 + Math.random() * 0.18) * node.radius * 3;
+    opacities[i] = 0.15 + Math.random() * 0.45;
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  geo.setAttribute('opacity', new THREE.BufferAttribute(opacities, 1));
+
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      splatMap: { value: splatTex },
+      time: { value: 0 },
+      highlight: { value: 0.0 },
+    },
+    vertexShader: `
+      attribute float size;
+      attribute float opacity;
+      varying vec3 vColor;
+      varying float vOpacity;
+      uniform float time;
+      uniform float highlight;
+      void main() {
+        vColor = color;
+        vOpacity = opacity * (0.6 + highlight * 0.4);
+        vec3 pos = position;
+        // Gentle breathing animation
+        float wave = sin(time * 0.5 + position.x * 2.0 + position.y * 3.0) * 0.03;
+        pos += normalize(position) * wave;
+        vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+        gl_PointSize = size * (200.0 / -mvPos.z) * (1.0 + highlight * 0.3);
+        gl_Position = projectionMatrix * mvPos;
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D splatMap;
+      varying vec3 vColor;
+      varying float vOpacity;
+      void main() {
+        vec2 uv = gl_PointCoord;
+        float alpha = texture2D(splatMap, uv).r;
+        if (alpha < 0.01) discard;
+        gl_FragColor = vec4(vColor, alpha * vOpacity);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true,
+  });
+
+  const points = new THREE.Points(geo, mat);
+  points.position.set(...node.pos);
+  points.userData = node;
+  nodeGroup.add(points);
+  nodeObjects.push(points);
+
+  // Core glow sphere
+  const glowGeo = new THREE.SphereGeometry(node.radius * 0.12, 16, 16);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: color, transparent: true, opacity: 0.6,
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.set(...node.pos);
+  nodeGroup.add(glow);
+}
+
+// Co-occurrence edges as luminous lines
+const edgeGroup = new THREE.Group();
+scene.add(edgeGroup);
+
+const nodeById = {};
+for (const obj of nodeObjects) nodeById[obj.userData.id] = obj;
+
+for (const edge of data.edges) {
+  const src = nodeById[edge.source];
+  const tgt = nodeById[edge.target];
+  if (!src || !tgt) continue;
+
+  const points = [];
+  const a = src.position.clone();
+  const b = tgt.position.clone();
+  const mid = a.clone().add(b).multiplyScalar(0.5);
+  mid.y += 0.3;
+
+  // Quadratic curve
+  const curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+  const pts = curve.getPoints(20);
+
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const opacity = Math.min(0.35, edge.weight / 3000);
+  const lineColor = new THREE.Color(src.userData.color).lerp(new THREE.Color(tgt.userData.color), 0.5);
+
+  const mat = new THREE.LineBasicMaterial({
+    color: lineColor, transparent: true, opacity,
+    blending: THREE.AdditiveBlending,
+  });
+  const line = new THREE.Line(geo, mat);
+  line.userData = edge;
+  edgeGroup.add(line);
+}
+
+// Background stars
+const starCount = 2000;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  starPos[i * 3]     = (Math.random() - 0.5) * 80;
+  starPos[i * 3 + 1] = (Math.random() - 0.5) * 80;
+  starPos[i * 3 + 2] = (Math.random() - 0.5) * 80;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const starMat = new THREE.PointsMaterial({ color: 0x334466, size: 0.04, transparent: true, opacity: 0.5 });
+scene.add(new THREE.Points(starGeo, starMat));
+
+// Gaussian random helper
+function gaussianRandom() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) * 0.33 + 0.5;
+}
+
+// Raycaster for interaction
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points.threshold = 0.5;
+const mouse = new THREE.Vector2();
+
+let selectedNode = null;
+
+canvas.addEventListener('click', (e) => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(nodeObjects);
+  if (intersects.length > 0) {
+    const obj = intersects[0].object;
+    selectNode(obj);
+    controls.autoRotate = false;
+  } else {
+    deselectNode();
+  }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(nodeObjects);
+  canvas.style.cursor = intersects.length > 0 ? 'pointer' : 'grab';
+
+  // Update hover highlights
+  for (const obj of nodeObjects) {
+    const isHovered = intersects.length > 0 && intersects[0].object === obj;
+    obj.material.uniforms.highlight.value = THREE.MathUtils.lerp(
+      obj.material.uniforms.highlight.value,
+      isHovered || (selectedNode === obj) ? 1.0 : 0.0,
+      0.15
+    );
+  }
+});
+
+function selectNode(obj) {
+  selectedNode = obj;
+  const node = obj.userData;
+
+  // Find connected edges and nodes
+  const connections = data.edges.filter(e => e.source === node.id || e.target === node.id)
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, 8);
+
+  const connectedIds = new Set(connections.flatMap(e => [e.source, e.target]));
+
+  // Find relevant quotes
+  const nodeQuotes = data.quotes.filter(q =>
+    q.arm.toLowerCase() === node.arm.toLowerCase() ||
+    node.label.toLowerCase().includes(q.category.toLowerCase()) ||
+    q.category.toLowerCase().includes(node.arm.toLowerCase())
+  ).slice(0, 3);
+
+  let html = `
+    <h2>${node.label}</h2>
+    <div class="meta">${node.arm} &middot; ${node.parent}</div>
+    <div class="stat-row">
+      <div class="stat"><strong>${node.mentions.toLocaleString()}</strong><span>Mentions</span></div>
+      <div class="stat"><strong>${node.share}%</strong><span>Corpus share</span></div>
+    </div>
+  `;
+
+  if (connections.length > 0) {
+    html += `<div class="connections"><h3 style="font-size:13px;color:var(--accent);margin-bottom:6px;">Connected topics</h3>`;
+    for (const conn of connections) {
+      const otherId = conn.source === node.id ? conn.target : conn.source;
+      const otherNode = data.nodes.find(n => n.id === otherId);
+      if (otherNode) {
+        html += `<div class="conn-item">${otherNode.label} <span style="float:right;color:var(--accent)">${conn.weight.toLocaleString()}</span></div>`;
+      }
+    }
+    html += `</div>`;
+  }
+
+  if (nodeQuotes.length > 0) {
+    html += `<h3 style="font-size:13px;color:var(--accent);margin-top:16px;">Related quotes</h3>`;
+    for (const q of nodeQuotes) {
+      html += `
+        <div class="quote-card">
+          <blockquote>"${q.text}"</blockquote>
+          <div class="attr">
+            <strong>${q.speaker}</strong> &middot; ${q.title} &middot; ${q.company}<br>
+            ${q.podcast} &middot; <a href="${q.url}" target="_blank" rel="noopener">${q.episode}</a>
+          </div>
+        </div>`;
+    }
+  }
+
+  document.getElementById('panelContent').innerHTML = html;
+  document.getElementById('infoPanel').classList.add('open');
+
+  // Camera fly-to
+  const target = new THREE.Vector3(...node.pos);
+  const camTarget = target.clone().add(new THREE.Vector3(2, 1.5, 3).normalize().multiplyScalar(4));
+  animateCamera(camTarget, target);
+
+  // Hide help toast
+  document.getElementById('helpToast').classList.add('hidden');
+}
+
+function deselectNode() {
+  selectedNode = null;
+  document.getElementById('infoPanel').classList.remove('open');
+  for (const obj of nodeObjects) {
+    obj.material.uniforms.highlight.value = 0;
+  }
+}
+
+document.getElementById('closePanel').addEventListener('click', deselectNode);
+
+// Camera animation
+let cameraAnimation = null;
+function animateCamera(targetPos, lookAt) {
+  const startPos = camera.position.clone();
+  const startLook = controls.target.clone();
+  const startTime = performance.now();
+  const duration = 1200;
+
+  cameraAnimation = { startPos, targetPos, startLook, lookAt, startTime, duration };
+}
+
+// Arm filter buttons
+document.querySelectorAll('.btn[data-arm]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.btn[data-arm]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const arm = btn.dataset.arm;
+
+    for (const obj of nodeObjects) {
+      const visible = arm === 'all' || obj.userData.arm === arm;
+      obj.visible = visible;
+    }
+    for (const line of edgeGroup.children) {
+      const src = nodeById[line.userData.source];
+      const tgt = nodeById[line.userData.target];
+      line.visible = src?.visible && tgt?.visible;
+    }
+
+    deselectNode();
+    updateLegend(arm);
+  });
+});
+
+// Build legend
+function updateLegend(arm) {
+  const colors = arm === 'Pac' ? {
+    'Design, brand, and consumer experience': '#e0fd2c',
+    'Retail and consumer performance': '#4fc3f7',
+    'Materials, sustainability, and end-of-life': '#66bb6a',
+    'Manufacturing and commercial execution': '#ff7043',
+    'Circular systems and recovery': '#26c6da',
+    'Claims and compliance': '#ab47bc',
+  } : arm === 'Agency' ? {
+    'Retail and distribution operations': '#4fc3f7',
+    'Manufacturing and supplier management': '#ff7043',
+    'Financial and operational control': '#e0fd2c',
+    'Channel strategy': '#ab47bc',
+    'Packaging and compliance': '#66bb6a',
+    'Operational technology': '#26c6da',
+  } : {
+    'Retail ops (Agency)': '#4fc3f7',
+    'Manufacturing (Agency)': '#ff7043',
+    'Finance (Agency)': '#e0fd2c',
+    'Design (Pac)': '#e0fd2c',
+    'Materials (Pac)': '#66bb6a',
+    'Circular (Pac)': '#26c6da',
+  };
+
+  let html = '<h3>Topic families</h3><div class="legend-items">';
+  for (const [label, color] of Object.entries(colors)) {
+    html += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${label}</div>`;
+  }
+  html += '</div>';
+  document.getElementById('legend').innerHTML = html;
+}
+updateLegend('all');
+
+// Animation loop
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  // Update splat animations
+  for (const obj of nodeObjects) {
+    obj.material.uniforms.time.value = t;
+
+    // Gentle float
+    const base = obj.userData.pos;
+    obj.position.y = base[1] + Math.sin(t * 0.3 + base[0]) * 0.08;
+  }
+
+  // Camera animation
+  if (cameraAnimation) {
+    const { startPos, targetPos, startLook, lookAt, startTime, duration } = cameraAnimation;
+    const elapsed = performance.now() - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    const ease = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+
+    camera.position.lerpVectors(startPos, targetPos, ease);
+    controls.target.lerpVectors(startLook, lookAt, ease);
+
+    if (progress >= 1) cameraAnimation = null;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// Resize
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// Loading done
+setTimeout(() => document.getElementById('loading').classList.add('done'), 600);
+</script>
+</body>
+</html>
