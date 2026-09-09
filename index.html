@@ -5,15 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Logic Market Heatmap</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&family=Manrope:wght@500;700;800&display=swap');
-    :root{--ink:#07152e;--accent:#e0fd2c;--bg:#f5f5f3;--muted:#9da8bb;--line:#26344e;--hero:#07152e}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Manrope,sans-serif;transition:background .3s ease}body.pac{--ink:#2b211e;--accent:#ef6f45;--bg:#f4efe7;--muted:#cfc2bb;--line:#55433c;--hero:#2b211e}
-    header{background:var(--hero);color:#fff;padding:30px max(24px,calc((100% - 1180px)/2));display:flex;align-items:flex-end;justify-content:space-between;gap:28px;transition:background .3s ease}.eyebrow{font:500 11px DM Mono;letter-spacing:.16em;color:var(--accent)}h1{font-size:clamp(34px,5vw,56px);line-height:1;letter-spacing:-.05em;margin:9px 0}.hero-copy{margin:0;color:var(--muted);max-width:610px}.tabs{display:flex;gap:6px;flex-shrink:0}.tab{border:1px solid #ffffff32;background:transparent;padding:11px 20px;border-radius:99px;font:700 12px DM Mono;color:#fff;cursor:pointer}.tab.active{background:var(--accent);border-color:var(--accent);color:var(--hero)}
-    main{margin:0}.panel{display:none}.panel.active{display:block}.report-frame{display:block;width:100%;height:100vh;min-height:1100px;border:0;background:var(--bg)}footer{display:none}@media(max-width:720px){header{align-items:flex-start;flex-direction:column}.tabs{width:100%}.tab{flex:1}}
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Serif+Display&family=Poppins:wght@400;500;600;700;800&display=swap');
+    :root{--o:#FF600A;--lime:#E0FD2C;--navy:#050D1F;--dk:#2A2A2A;--bg:#F3F3F3;--muted:#6a7080;--line:#dce1d8}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--dk);font:15px/1.6 Poppins,sans-serif;transition:background .3s}
+    body.pac{--bg:#F5F5F3;--dk:#050D1F;--line:#D8DDE8}
+    header{background:var(--dk);color:#fff;padding:36px max(24px,calc((100% - 1240px)/2)) 28px;display:flex;align-items:flex-end;justify-content:space-between;gap:28px;transition:background .3s}
+    body.pac header{background:var(--navy)}
+    .eyebrow{font:600 11px Poppins;letter-spacing:.16em;text-transform:uppercase;color:var(--o)}
+    body.pac .eyebrow{color:var(--lime)}
+    h1{font:800 clamp(32px,5vw,52px)/1 Poppins;letter-spacing:-.04em;margin:8px 0}
+    body.pac h1{font-family:'DM Serif Display',serif;font-weight:400;letter-spacing:-.02em}
+    .hero-copy{margin:0;color:rgba(255,255,255,.6);max-width:600px;font-size:14px}
+    .hero-stats{display:flex;gap:28px;margin-top:16px}
+    .hero-stat strong{display:block;font-size:24px;font-weight:800;color:var(--o)}
+    body.pac .hero-stat strong{color:var(--lime)}
+    .hero-stat span{font:500 9px DM Mono;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45)}
+    .tabs{display:flex;gap:6px;flex-shrink:0}
+    .tab{border:1px solid rgba(255,255,255,.2);background:transparent;padding:10px 20px;border-radius:50px;font:700 12px Poppins;color:#fff;cursor:pointer;text-decoration:none;transition:all .2s}
+    .tab:hover{border-color:rgba(255,255,255,.5)}
+    .tab.active{background:var(--o);border-color:var(--o);color:#fff}
+    body.pac .tab.active{background:var(--lime);border-color:var(--lime);color:var(--navy)}
+    .tab-3d{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.15)!important}
+    .tab-3d:hover{border-color:rgba(255,255,255,.4)!important}
+    main{margin:0}.panel{display:none}.panel.active{display:block}
+    .report-frame{display:block;width:100%;height:100vh;min-height:1100px;border:0;background:var(--bg)}
+    @media(max-width:720px){header{align-items:flex-start;flex-direction:column}.tabs{width:100%}.tab{flex:1;text-align:center}.hero-stats{gap:16px}.hero-stat strong{font-size:18px}}
   </style>
 </head>
 <body>
-  <header><div><span class="eyebrow">LOGIC INC</span><h1>Market Heatmap</h1><p class="hero-copy">One research surface. Two distinct markets. Full evidence, trends, voices, connections, and resources for each arm.</p></div><nav class="tabs" aria-label="Heatmap sections"><button class="tab active" data-tab="agency">Agency</button><button class="tab" data-tab="pac">Pac</button><a href="viz/" class="tab" style="text-decoration:none">3D Explorer</a></nav></header>
+  <header>
+    <div>
+      <span class="eyebrow">Logic Inc</span>
+      <h1>Market Heatmap</h1>
+      <p class="hero-copy">Corpus-based market intelligence across 162 sources, 238 founder and operator quotes, and 23 topic clusters — powering content, outreach, and positioning for both Logic Agency and Logic Pac.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>238</strong><span>Verified quotes</span></div>
+        <div class="hero-stat"><strong>162</strong><span>Sources</span></div>
+        <div class="hero-stat"><strong>6</strong><span>Categories</span></div>
+        <div class="hero-stat"><strong>23</strong><span>Topic clusters</span></div>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Heatmap sections">
+      <button class="tab active" data-tab="agency">Agency</button>
+      <button class="tab" data-tab="pac">Pac</button>
+      <a href="viz/" class="tab tab-3d">3D Explorer</a>
+    </nav>
+  </header>
   <main>
     <section class="panel active" id="agency">
       <iframe class="report-frame" title="Logic Agency Heatmap" src="agency/agency-heatmap-report.html"></iframe>
@@ -22,10 +59,9 @@
       <iframe class="report-frame" title="Logic Pac Heatmap" src="pac/pac-heatmap-report.html"></iframe>
     </section>
   </main>
-  <footer>Working research project · Counts are corpus signals, not market-size estimates.</footer>
   <script>
-    function activate(name){document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));document.querySelector(`.tab[data-tab="${name}"]`).classList.add('active');document.getElementById(name).classList.add('active');document.body.classList.toggle('pac',name==='pac');history.replaceState(null,'','#'+name)}
-    document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.tab)));
+    function activate(name){document.querySelectorAll('.tab[data-tab],.panel').forEach(x=>x.classList.remove('active'));const btn=document.querySelector(`.tab[data-tab="${name}"]`);if(btn)btn.classList.add('active');const panel=document.getElementById(name);if(panel)panel.classList.add('active');document.body.classList.toggle('pac',name==='pac');history.replaceState(null,'','#'+name)}
+    document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.tab)));
     if(location.hash==='#pac')activate('pac');
     document.querySelectorAll('iframe').forEach(frame=>frame.addEventListener('load',()=>{try{frame.style.height=(frame.contentDocument.documentElement.scrollHeight+12)+'px'}catch(e){}}));
   </script>
