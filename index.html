@@ -18,51 +18,88 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #040608; color: #d8dde8; font: 14px/1.5 Poppins, sans-serif; overflow-x: hidden; }
+
+/* ── Navigation bar ── */
+.nav-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 64px;
+  background: rgba(4,6,8,.92); backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  transition: background .4s;
+}
+body.tab-agency .nav-bar { background: rgba(42,42,42,.95); }
+body.tab-pac .nav-bar { background: rgba(5,13,31,.95); }
+
+.nav-brand { display: flex; align-items: center; gap: 12px; }
+.nav-brand .eyebrow {
+  font: 600 10px Poppins; letter-spacing: .2em; text-transform: uppercase;
+  transition: color .4s;
+}
+body.tab-all .nav-brand .eyebrow { background: linear-gradient(90deg, var(--accent-a), var(--accent-p)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+body.tab-agency .nav-brand .eyebrow { color: var(--accent-a); }
+body.tab-pac .nav-brand .eyebrow { color: var(--accent-p); }
+.nav-brand h1 { font: 800 20px/1 Poppins; letter-spacing: -.03em; color: white; }
+body.tab-pac .nav-brand h1 { font-family: 'DM Serif Display', serif; font-weight: 400; }
+
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab {
+  font: 600 11px Poppins; text-transform: uppercase; letter-spacing: .04em;
+  padding: 8px 18px; border-radius: 50px; border: 1px solid rgba(255,255,255,.12);
+  background: transparent; color: rgba(255,255,255,.6); cursor: pointer;
+  transition: all .2s; text-decoration: none;
+}
+.nav-tab:hover { border-color: rgba(255,255,255,.4); color: #fff; }
+.nav-tab.active { color: #fff; }
+body.tab-all .nav-tab.active[data-tab="all"] { background: linear-gradient(135deg, var(--accent-a), var(--accent-p)); border-color: transparent; color: #111; }
+body.tab-agency .nav-tab.active[data-tab="agency"] { background: var(--accent-a); border-color: var(--accent-a); color: #fff; }
+body.tab-pac .nav-tab.active[data-tab="pac"] { background: var(--accent-p); border-color: var(--accent-p); color: var(--navy); }
+
+.nav-stat { font: 400 10px DM Mono; color: rgba(255,255,255,.35); margin-left: 12px; }
+
+/* ── Panel switching ── */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Table report panels ── */
+.report-panel {
+  padding-top: 64px;
+  min-height: 100vh;
+  transition: background .3s;
+}
+body.tab-agency .report-panel { background: #F3F3F3; }
+body.tab-pac .report-panel { background: #F5F5F3; }
+.report-frame { display: block; width: 100%; border: 0; min-height: calc(100vh - 64px); }
+
+/* ── 3D explorer panel ── */
+.explorer-panel { padding-top: 0; }
 #three-container { position: fixed; inset: 0; z-index: 0; }
 #three-container canvas { display: block; width: 100%; height: 100%; }
 
-/* Scroll runway */
-.scroll-runway { position: relative; z-index: 2; pointer-events: none; }
+.scroll-runway { position: relative; z-index: 2; pointer-events: none; padding-top: 64px; }
 .scroll-runway .spacer { height: 100vh; }
 
-/* HUD */
-.hud { position: fixed; z-index: 20; pointer-events: none; }
-.hud > * { pointer-events: auto; }
+/* 3D HUD elements */
+.three-hud { position: fixed; z-index: 20; pointer-events: none; }
+.three-hud > * { pointer-events: auto; }
+.three-hud.hidden { display: none; }
 
-.top-bar {
-  top: 0; left: 0; right: 0; padding: 20px 32px;
-  display: flex; justify-content: space-between; align-items: flex-start;
-  background: linear-gradient(to bottom, rgba(4,6,8,.9) 0%, rgba(4,6,8,.4) 70%, transparent 100%);
+.arm-filters {
+  position: fixed; top: 80px; left: 32px; z-index: 20;
+  display: flex; gap: 4px;
 }
-.brand { display: flex; flex-direction: column; gap: 3px; }
-.brand .eyebrow { font: 600 10px Poppins; letter-spacing: .2em; text-transform: uppercase; transition: color .4s; }
-.brand h1 { font: 800 30px/1 Poppins; letter-spacing: -.04em; color: white; }
-body.theme-pac .brand h1 { font-family: 'DM Serif Display', serif; font-weight: 400; letter-spacing: -.02em; }
-.brand .sub { font: 11px DM Mono; color: var(--muted); margin-top: 3px; }
-
-.nav-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.btn {
-  font: 600 11px Poppins; text-transform: uppercase; letter-spacing: .04em;
-  padding: 9px 18px; border-radius: 50px; border: 1px solid rgba(255,255,255,.15);
-  background: rgba(12,14,22,.7); color: #c9d1df; cursor: pointer; transition: all .2s;
-  text-decoration: none; backdrop-filter: blur(8px);
+.arm-btn {
+  font: 600 10px Poppins; text-transform: uppercase; letter-spacing: .04em;
+  padding: 6px 14px; border-radius: 50px; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(12,14,22,.7); color: rgba(255,255,255,.5); cursor: pointer;
+  transition: all .2s; backdrop-filter: blur(8px);
 }
-.btn:hover { border-color: rgba(255,255,255,.5); color: #fff; }
-.btn.active { color: #fff; }
-.btn.secondary { font-size: 10px; padding: 7px 14px; opacity: .7; }
-.btn.secondary:hover { opacity: 1; }
+.arm-btn:hover { border-color: rgba(255,255,255,.4); color: #fff; }
+.arm-btn.active { background: linear-gradient(135deg, var(--accent-a), var(--accent-p)); border-color: transparent; color: #111; }
+.arm-btn.active[data-arm="Agency"] { background: var(--accent-a); color: #fff; }
+.arm-btn.active[data-arm="Pac"] { background: var(--accent-p); color: var(--navy); }
 
-/* Theme states */
-body.theme-all .btn.active[data-arm="all"] { background: linear-gradient(135deg, var(--accent-a), var(--accent-p)); border-color: transparent; color: #111; }
-body.theme-all .brand .eyebrow { background: linear-gradient(90deg, var(--accent-a), var(--accent-p)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-
-body.theme-agency .btn.active[data-arm="Agency"] { background: var(--accent-a); border-color: var(--accent-a); color: #fff; }
-body.theme-agency .brand .eyebrow { color: var(--accent-a); -webkit-text-fill-color: var(--accent-a); background: none; }
-
-body.theme-pac .btn.active[data-arm="Pac"] { background: var(--accent-p); border-color: var(--accent-p); color: var(--navy); }
-body.theme-pac .brand .eyebrow { color: var(--accent-p); -webkit-text-fill-color: var(--accent-p); background: none; }
-
-/* Topic tags (CSS2D) */
+/* Topic tags */
 .topic-tag {
   pointer-events: auto; cursor: pointer; text-align: center;
   transition: opacity .3s;
@@ -92,21 +129,16 @@ body.theme-pac .brand .eyebrow { color: var(--accent-p); -webkit-text-fill-color
 .info-panel .close-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; padding: 6px; }
 .info-panel .close-btn:hover { color: white; }
 .info-panel h2 { font: 700 17px/1.25 Poppins; letter-spacing: -.02em; color: white; padding-right: 30px; }
-body.theme-pac .info-panel h2 { font-family: 'DM Serif Display', serif; font-weight: 400; }
 .info-panel .meta { font: 11px DM Mono; color: var(--muted); }
 .info-panel .stat-row { display: flex; gap: 12px; }
 .info-panel .stat { flex: 1; background: rgba(255,255,255,.04); border-radius: 10px; padding: 10px; }
-.info-panel .stat strong { display: block; font-size: 20px; }
-body.theme-all .info-panel .stat strong, body.theme-agency .info-panel .stat strong { color: var(--accent-a); }
-body.theme-pac .info-panel .stat strong { color: var(--accent-p); }
+.info-panel .stat strong { display: block; font-size: 20px; color: var(--accent-a); }
 .info-panel .stat span { font: 10px DM Mono; color: var(--muted); text-transform: uppercase; }
 .info-panel .conn-item { font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--line); color: #a0aab8; }
 .info-panel .quote-card { background: rgba(255,255,255,.03); border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 4px; }
 .info-panel .quote-card blockquote { font-size: 13px; line-height: 1.5; color: #e0e4ec; margin: 0 0 6px; font-style: italic; }
 .info-panel .quote-card .attr { font: 10px DM Mono; color: var(--muted); }
-.info-panel .quote-card a { text-decoration: none; }
-body.theme-all .info-panel .quote-card a, body.theme-agency .info-panel .quote-card a { color: var(--accent-a); }
-body.theme-pac .info-panel .quote-card a { color: var(--accent-p); }
+.info-panel .quote-card a { text-decoration: none; color: var(--accent-a); }
 
 /* Legend */
 .legend {
@@ -128,9 +160,7 @@ body.theme-pac .info-panel .quote-card a { color: var(--accent-p); }
   width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.12);
   border: 1px solid rgba(255,255,255,.18); cursor: pointer; transition: all .25s; position: relative;
 }
-.rail-dot.active { transform: scale(1.5); }
-body.theme-all .rail-dot.active, body.theme-agency .rail-dot.active { background: var(--accent-a); border-color: var(--accent-a); }
-body.theme-pac .rail-dot.active { background: var(--accent-p); border-color: var(--accent-p); }
+.rail-dot.active { transform: scale(1.5); background: var(--accent-a); border-color: var(--accent-a); }
 .rail-dot .tip {
   position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
   font: 500 10px DM Mono; color: #c9d1df; white-space: nowrap; background: var(--panel);
@@ -139,7 +169,7 @@ body.theme-pac .rail-dot.active { background: var(--accent-p); border-color: var
 }
 .rail-dot:hover .tip { opacity: 1; }
 
-/* Current topic at bottom */
+/* Current topic */
 .current-topic {
   position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%); z-index: 22;
   text-align: center; transition: opacity .4s; pointer-events: none;
@@ -147,7 +177,6 @@ body.theme-pac .rail-dot.active { background: var(--accent-p); border-color: var
 .current-topic.hidden { opacity: 0; }
 .current-topic .ct-num { font: 600 10px DM Mono; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .current-topic .ct-title { font: 700 22px/1.2 Poppins; color: white; text-shadow: 0 2px 24px rgba(0,0,0,.9); max-width: 560px; }
-body.theme-pac .current-topic .ct-title { font-family: 'DM Serif Display', serif; font-weight: 400; }
 .current-topic .ct-meta { font: 12px DM Mono; color: var(--muted); margin-top: 4px; }
 
 /* Scroll prompt */
@@ -172,55 +201,143 @@ body.theme-pac .current-topic .ct-title { font-family: 'DM Serif Display', serif
   .info-panel { left: 12px; right: 12px; width: auto; top: auto; bottom: 0; max-height: 55vh; border-radius: 16px 16px 0 0; }
   .legend, .progress-rail { display: none; }
   .current-topic .ct-title { font-size: 16px; max-width: 80vw; }
-  .top-bar { padding: 14px 16px; }
-  .brand h1 { font-size: 22px; }
-  .nav-row { gap: 4px; }
-  .btn { padding: 7px 12px; font-size: 10px; }
+  .nav-bar { padding: 0 16px; }
+  .nav-brand h1 { font-size: 16px; }
+  .nav-tab { padding: 6px 12px; font-size: 10px; }
+  .nav-stat { display: none; }
+  .arm-filters { left: 16px; top: 76px; }
 }
 </style>
 </head>
-<body class="theme-all">
+<body class="tab-all">
 
 <div class="loading" id="loading">
   <div class="spinner"></div>
   <div class="loading-text">Loading market intelligence</div>
 </div>
 
-<div class="hud top-bar">
-  <div class="brand">
-    <span class="eyebrow">Logic Inc</span>
-    <h1>Market Heatmap</h1>
-    <span class="sub">238 quotes &middot; 162 sources &middot; 6 categories</span>
+<!-- ── Fixed navigation bar ── -->
+<nav class="nav-bar" id="navBar">
+  <div class="nav-brand">
+    <div>
+      <span class="eyebrow">Logic Inc</span>
+      <h1>Market Heatmap</h1>
+    </div>
+    <span class="nav-stat">273 quotes &middot; 115 sources &middot; 6 categories</span>
   </div>
-  <div class="nav-row">
-    <button class="btn active" data-arm="all" id="btnAll">All</button>
-    <button class="btn" data-arm="Agency" id="btnAgency">Agency</button>
-    <button class="btn" data-arm="Pac" id="btnPac">Pac</button>
-    <a href="tables/" class="btn secondary">Data Tables</a>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-tab="all">All</button>
+    <button class="nav-tab" data-tab="agency">Agency</button>
+    <button class="nav-tab" data-tab="pac">Pac</button>
+  </div>
+</nav>
+
+<!-- ── Tab: ALL (3D Explorer) ── -->
+<div class="tab-panel active" id="panel-all">
+  <div class="arm-filters three-hud" id="armFilters">
+    <button class="arm-btn active" data-arm="all">All Topics</button>
+    <button class="arm-btn" data-arm="Agency">Agency Only</button>
+    <button class="arm-btn" data-arm="Pac">Pac Only</button>
+  </div>
+
+  <div class="info-panel" id="infoPanel">
+    <button class="close-btn" id="closePanel">&times;</button>
+    <div id="panelContent"></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+  <div class="progress-rail three-hud" id="progressRail"></div>
+
+  <div class="current-topic hidden three-hud" id="currentTopic">
+    <div class="ct-num" id="ctNum"></div>
+    <div class="ct-title" id="ctTitle"></div>
+    <div class="ct-meta" id="ctMeta"></div>
+  </div>
+
+  <div class="scroll-prompt three-hud" id="scrollPrompt">
+    <span class="scroll-arrow">&#8595;</span> Scroll to explore topics
+  </div>
+
+  <div id="three-container"></div>
+  <div class="scroll-runway" id="scrollRunway"></div>
+</div>
+
+<!-- ── Tab: AGENCY (Table Report) ── -->
+<div class="tab-panel" id="panel-agency">
+  <div class="report-panel">
+    <iframe class="report-frame" id="agencyFrame" title="Logic Agency Heatmap" data-src="agency/agency-heatmap-report.html"></iframe>
   </div>
 </div>
 
-<div class="info-panel" id="infoPanel">
-  <button class="close-btn" id="closePanel">&times;</button>
-  <div id="panelContent"></div>
+<!-- ── Tab: PAC (Table Report) ── -->
+<div class="tab-panel" id="panel-pac">
+  <div class="report-panel">
+    <iframe class="report-frame" id="pacFrame" title="Logic Pac Heatmap" data-src="pac/pac-heatmap-report.html"></iframe>
+  </div>
 </div>
 
-<div class="legend" id="legend"></div>
-<div class="progress-rail" id="progressRail"></div>
+<!-- ── Tab switching logic ── -->
+<script>
+window._activeTab = 'all';
 
-<div class="current-topic hidden" id="currentTopic">
-  <div class="ct-num" id="ctNum"></div>
-  <div class="ct-title" id="ctTitle"></div>
-  <div class="ct-meta" id="ctMeta"></div>
-</div>
+function switchTab(tab) {
+  window._activeTab = tab;
+  document.body.className = 'tab-' + tab;
 
-<div class="scroll-prompt" id="scrollPrompt">
-  <span class="scroll-arrow">&#8595;</span> Scroll to explore topics
-</div>
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.querySelector('.nav-tab[data-tab="' + tab + '"]').classList.add('active');
 
-<div id="three-container"></div>
-<div class="scroll-runway" id="scrollRunway"></div>
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
 
+  // Show/hide 3D HUD elements
+  document.querySelectorAll('.three-hud').forEach(el => {
+    el.classList.toggle('hidden', tab !== 'all');
+  });
+
+  // Show/hide the three-container and scroll runway
+  const threeC = document.getElementById('three-container');
+  const scrollR = document.getElementById('scrollRunway');
+  if (threeC) threeC.style.display = tab === 'all' ? '' : 'none';
+  if (scrollR) scrollR.style.display = tab === 'all' ? '' : 'none';
+
+  // Lazy-load iframes
+  if (tab === 'agency') {
+    const f = document.getElementById('agencyFrame');
+    if (!f.src || !f.src.includes('agency')) f.src = f.dataset.src;
+  } else if (tab === 'pac') {
+    const f = document.getElementById('pacFrame');
+    if (!f.src || !f.src.includes('pac')) f.src = f.dataset.src;
+  }
+
+  // Reset scroll for table tabs
+  if (tab !== 'all') window.scrollTo(0, 0);
+
+  // Allow body scroll for table views, constrain for 3D
+  document.body.style.overflow = tab === 'all' ? '' : 'auto';
+  document.body.style.background = tab === 'agency' ? '#F3F3F3' : tab === 'pac' ? '#F5F5F3' : '#040608';
+
+  history.replaceState(null, '', '#' + tab);
+}
+
+document.querySelectorAll('.nav-tab').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// Auto-resize iframes
+document.querySelectorAll('iframe.report-frame').forEach(frame => {
+  frame.addEventListener('load', () => {
+    try { frame.style.height = (frame.contentDocument.documentElement.scrollHeight + 20) + 'px'; }
+    catch(e) { frame.style.height = '4000px'; }
+  });
+});
+
+// Handle hash on load
+const hash = location.hash.replace('#', '');
+if (hash === 'agency' || hash === 'pac') switchTab(hash);
+</script>
+
+<!-- ── 3D Explorer (Three.js) ── -->
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
@@ -236,7 +353,6 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-// ── Renderer ──
 const container = document.getElementById('three-container');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -261,13 +377,11 @@ controls.autoRotate = true;
 controls.autoRotateSpeed = 0.25;
 controls.enableZoom = false;
 
-// Bloom
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.6, 0.4, 0.85);
 composer.addPass(bloom);
 
-// CSS2D label renderer
 const labelRenderer = new CSS2DRenderer();
 labelRenderer.setSize(innerWidth, innerHeight);
 labelRenderer.domElement.style.position = 'fixed';
@@ -278,13 +392,11 @@ labelRenderer.domElement.style.pointerEvents = 'none';
 labelRenderer.domElement.style.overflow = 'visible';
 document.body.appendChild(labelRenderer.domElement);
 
-// Lighting
 scene.add(new THREE.AmbientLight(0x181828, 0.4));
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.25);
 dirLight.position.set(5, 12, 7);
 scene.add(dirLight);
 
-// Gaussian splat texture
 function createSplatTexture(size = 128) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
@@ -308,10 +420,8 @@ function gaussRand() {
   return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) * 0.33 + 0.5;
 }
 
-// ── Load data ──
 const data = await fetch('viz/data.json').then(r => r.json());
 
-// ── Build topic clusters ──
 const nodeObjects = [];
 const labelObjects = [];
 const nodeGroup = new THREE.Group();
@@ -385,7 +495,6 @@ for (const node of data.nodes) {
   nodeGroup.add(points);
   nodeObjects.push(points);
 
-  // Core glow
   const glowGeo = new THREE.SphereGeometry(node.radius * 0.12, 16, 16);
   const glowMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55 });
   const glow = new THREE.Mesh(glowGeo, glowMat);
@@ -395,8 +504,7 @@ for (const node of data.nodes) {
   // Floating tag
   const el = document.createElement('div');
   el.className = 'topic-tag ' + node.arm.toLowerCase();
-  el.dataset.arm = node.arm;
-  const words = node.label.split(/[,]/)[0].trim();
+  const words = node.label.split(',')[0].split(' and ')[0].trim();
   el.textContent = words.length > 28 ? words.slice(0, 26) + '...' : words;
   el.addEventListener('click', (e) => { e.stopPropagation(); selectNode(points, false); controls.autoRotate = false; });
   const labelObj = new CSS2DObject(el);
@@ -406,7 +514,7 @@ for (const node of data.nodes) {
   labelObjects.push({ obj: labelObj, el, arm: node.arm, nodeId: node.id });
 }
 
-// ── Co-occurrence edges ──
+// Co-occurrence edges
 const edgeGroup = new THREE.Group();
 scene.add(edgeGroup);
 const nodeById = {};
@@ -430,7 +538,7 @@ for (const edge of data.edges) {
   edgeGroup.add(line);
 }
 
-// ── Dot enclosure ──
+// Dot enclosure
 const bbox = new THREE.Box3();
 for (const obj of nodeObjects) bbox.expandByPoint(new THREE.Vector3(...obj.userData.pos));
 const center = new THREE.Vector3(); bbox.getCenter(center);
@@ -493,7 +601,7 @@ scene.add(new THREE.Points(dustGeo, new THREE.PointsMaterial({
   map: splatTex, blending: THREE.AdditiveBlending, depthWrite: false
 })));
 
-// ── Scroll-driven topic tour ──
+// Scroll-driven topic tour
 const sortedNodes = [...data.nodes].sort((a, b) => b.mentions - a.mentions);
 const runway = document.getElementById('scrollRunway');
 for (let i = 0; i < sortedNodes.length + 2; i++) {
@@ -525,6 +633,7 @@ const ctMeta = document.getElementById('ctMeta');
 const promptEl = document.getElementById('scrollPrompt');
 
 function onScroll() {
+  if (window._activeTab !== 'all') return;
   const scrollMax = document.body.scrollHeight - innerHeight;
   if (scrollMax <= 0) return;
   const frac = window.scrollY / scrollMax;
@@ -558,13 +667,14 @@ function onScroll() {
 }
 window.addEventListener('scroll', onScroll, { passive: true });
 
-// ── Click and hover ──
+// Click and hover
 const raycaster = new THREE.Raycaster();
 raycaster.params.Points.threshold = 0.5;
 const mouse = new THREE.Vector2();
 let selectedNode = null;
 
 renderer.domElement.addEventListener('click', (e) => {
+  if (window._activeTab !== 'all') return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
@@ -574,68 +684,74 @@ renderer.domElement.addEventListener('click', (e) => {
 });
 
 renderer.domElement.addEventListener('mousemove', (e) => {
+  if (window._activeTab !== 'all') return;
   mouse.x = (e.clientX / innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const hits = raycaster.intersectObjects(nodeObjects);
   renderer.domElement.style.cursor = hits.length > 0 ? 'pointer' : 'grab';
   for (const obj of nodeObjects) {
-    const h = hits.length > 0 && hits[0].object === obj;
+    const isHovered = hits.length > 0 && hits[0].object === obj;
     obj.material.uniforms.highlight.value = THREE.MathUtils.lerp(
-      obj.material.uniforms.highlight.value, h || (selectedNode === obj) ? 1.0 : 0.0, 0.15
+      obj.material.uniforms.highlight.value,
+      isHovered || (selectedNode === obj) ? 1.0 : 0.0, 0.15
     );
   }
 });
+
+// Topic keyword scoring for matching quotes
+const TOPIC_KW = {
+  retail: ['retail','buyer','store','shelf','category','wholesale','distributor'],
+  packaging: ['packaging','package','box','bottle','label','design','unboxing','sustainable'],
+  manufacturing: ['manufacturing','co-man','production','supplier','sourcing','factory','mold'],
+  operations: ['operations','ops','supply chain','logistics','inventory','forecasting'],
+  finance: ['margin','cost','economics','financial','capital','pricing'],
+  channel: ['amazon','dtc','direct','ecommerce','omnichannel'],
+  compliance: ['compliance','regulation','claims','certification','edi'],
+  sustainability: ['sustainable','circularity','refill','recyclable','pcr','reuse'],
+};
+
+function scoreQuote(qText, topicLabel) {
+  const tl = (qText || '').toLowerCase();
+  const ll = topicLabel.toLowerCase();
+  let s = 0;
+  for (const [, kws] of Object.entries(TOPIC_KW)) {
+    if (kws.some(k => ll.includes(k))) {
+      for (const k of kws) { if (tl.includes(k)) s++; }
+    }
+  }
+  return s;
+}
 
 function selectNode(obj, fromScroll) {
   selectedNode = obj;
   const node = obj.userData;
   const connections = data.edges.filter(e => e.source === node.id || e.target === node.id)
     .sort((a, b) => b.weight - a.weight).slice(0, 8);
-  const labelLower = node.label.toLowerCase();
-  const parentLower = (node.parent || '').toLowerCase();
-  const nodeQuotes = data.quotes
-    .map(q => {
-      let score = 0;
-      const catLower = q.category.toLowerCase();
-      const textLower = (q.text || '').toLowerCase();
-      if (q.arm === node.arm || q.arm === 'Both') score += 1;
-      if (labelLower.includes('retail') && (catLower.includes('cpg') || textLower.includes('retail'))) score += 3;
-      if (labelLower.includes('packaging') && (textLower.includes('packag') || textLower.includes('bottle') || textLower.includes('label'))) score += 3;
-      if (labelLower.includes('manufactur') && (textLower.includes('manufactur') || textLower.includes('co-man') || textLower.includes('supplier'))) score += 3;
-      if (labelLower.includes('inventory') && (textLower.includes('inventor') || textLower.includes('stock') || textLower.includes('forecast'))) score += 3;
-      if (labelLower.includes('sustain') && (textLower.includes('sustain') || textLower.includes('recycl') || textLower.includes('refill'))) score += 3;
-      if (labelLower.includes('design') && (textLower.includes('design') || textLower.includes('brand') || textLower.includes('unbox'))) score += 3;
-      if (labelLower.includes('margin') && (textLower.includes('cost') || textLower.includes('margin') || textLower.includes('price'))) score += 3;
-      if (labelLower.includes('wine') || labelLower.includes('spirits')) { if (catLower.includes('wine')) score += 4; }
-      if (labelLower.includes('beauty') || labelLower.includes('cosmetic')) { if (catLower.includes('beauty')) score += 4; }
-      if (labelLower.includes('electron') || labelLower.includes('hardware')) { if (catLower.includes('electron')) score += 4; }
-      if (labelLower.includes('jewel') || labelLower.includes('luxury')) { if (catLower.includes('luxury') || catLower.includes('jewel')) score += 4; }
-      if (labelLower.includes('wellness') || labelLower.includes('supplement')) { if (catLower.includes('wellness')) score += 4; }
-      return { q, score };
-    })
-    .filter(x => x.score >= 2)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map(x => x.q);
 
-  const accentVar = node.arm === 'Pac' ? 'var(--accent-p)' : 'var(--accent-a)';
+  const scored = data.quotes
+    .filter(q => (q.arm === node.arm || q.arm === 'Both' || node.arm === 'Both'))
+    .map(q => ({ q, s: scoreQuote(q.text, node.label) }))
+    .filter(x => x.s > 0)
+    .sort((a, b) => b.s - a.s);
+  const nodeQuotes = scored.slice(0, 4).map(x => x.q);
+
   let html = '<h2>' + node.label + '</h2>';
   html += '<div class="meta">' + node.arm + ' &middot; ' + node.parent + '</div>';
   html += '<div class="stat-row"><div class="stat"><strong>' + node.mentions.toLocaleString() + '</strong><span>Mentions</span></div>';
   html += '<div class="stat"><strong>' + node.share + '%</strong><span>Corpus share</span></div></div>';
 
   if (connections.length > 0) {
-    html += '<div class="connections"><h3 style="font-size:13px;color:' + accentVar + ';margin-bottom:6px;">Connected topics</h3>';
+    html += '<div class="connections"><h3 style="font-size:13px;color:var(--accent-a);margin-bottom:6px;">Connected topics</h3>';
     for (const conn of connections) {
       const otherId = conn.source === node.id ? conn.target : conn.source;
-      const other = data.nodes.find(n => n.id === otherId);
-      if (other) html += '<div class="conn-item">' + other.label + ' <span style="float:right;color:' + accentVar + '">' + conn.weight.toLocaleString() + '</span></div>';
+      const otherNode = data.nodes.find(n => n.id === otherId);
+      if (otherNode) html += '<div class="conn-item">' + otherNode.label + ' <span style="float:right;color:var(--accent-a)">' + conn.weight.toLocaleString() + '</span></div>';
     }
     html += '</div>';
   }
   if (nodeQuotes.length > 0) {
-    html += '<h3 style="font-size:13px;color:' + accentVar + ';margin-top:16px;">Related quotes</h3>';
+    html += '<h3 style="font-size:13px;color:var(--accent-a);margin-top:16px;">Related quotes</h3>';
     for (const q of nodeQuotes) {
       html += '<div class="quote-card"><blockquote>&ldquo;' + q.text + '&rdquo;</blockquote><div class="attr"><strong>' + q.speaker + '</strong> &middot; ' + q.title + ' &middot; ' + q.company + '<br>' + q.podcast + ' &middot; <a href="' + q.url + '" target="_blank" rel="noopener">' + q.episode + '</a></div></div>';
     }
@@ -672,64 +788,49 @@ function animateCamera(targetPos, lookAt) {
   };
 }
 
-// ── Arm filter + theming ──
-let currentArm = 'all';
+// 3D arm filter (within the All tab)
+let current3DArm = 'all';
+function set3DArm(arm) {
+  current3DArm = arm;
+  document.querySelectorAll('.arm-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.arm-btn[data-arm="' + arm + '"]').classList.add('active');
 
-function setArm(arm) {
-  currentArm = arm;
-  document.querySelectorAll('.btn[data-arm]').forEach(b => b.classList.remove('active'));
-  document.querySelector('.btn[data-arm="' + arm + '"]').classList.add('active');
-  document.body.className = arm === 'all' ? 'theme-all' : arm === 'Agency' ? 'theme-agency' : 'theme-pac';
-
-  for (const obj of nodeObjects) obj.visible = arm === 'all' || obj.userData.arm === arm;
-  for (const lo of labelObjects) {
-    const show = arm === 'all' || lo.arm === arm;
-    lo.el.classList.toggle('hidden', !show);
-    lo.obj.visible = show;
+  for (const obj of nodeObjects) {
+    obj.visible = arm === 'all' || obj.userData.arm === arm;
   }
   for (const line of edgeGroup.children) {
+    if (!line.userData) continue;
     const src = nodeById[line.userData.source];
     const tgt = nodeById[line.userData.target];
     line.visible = (src ? src.visible : false) && (tgt ? tgt.visible : false);
+  }
+  for (const lo of labelObjects) {
+    lo.el.classList.toggle('hidden', arm !== 'all' && lo.arm !== arm);
   }
 
   const fogColor = arm === 'Agency' ? 0x0c0806 : arm === 'Pac' ? 0x030a08 : 0x040608;
   scene.fog = new THREE.FogExp2(fogColor, 0.022);
   renderer.setClearColor(fogColor, 1);
 
-  const tint = arm === 'Agency' ? 0x1a1008 : arm === 'Pac' ? 0x0a1a0c : 0x1a1a2e;
-  structureGroup.traverse(child => { if (child.isPoints && child.material.color) child.material.color.set(tint); });
-
   deselectNode();
   updateLegend(arm);
 }
 
-document.querySelectorAll('.btn[data-arm]').forEach(btn => {
-  btn.addEventListener('click', () => setArm(btn.dataset.arm));
+document.querySelectorAll('.arm-btn').forEach(btn => {
+  btn.addEventListener('click', () => set3DArm(btn.dataset.arm));
 });
 
 function updateLegend(arm) {
   const legends = arm === 'Pac' ? {
-    'Design & experience': '#E0FD2C',
-    'Retail & conversion': '#C8E820',
-    'Materials & sustainability': '#66BB6A',
-    'Manufacturing': '#D4E87A',
-    'Circular systems': '#26C6DA',
-    'Claims & compliance': '#B8C0D0',
+    'Design & brand': '#E0FD2C', 'Retail fit': '#C8E820', 'Materials': '#66BB6A',
+    'Manufacturing': '#D4E87A', 'Circularity': '#26C6DA', 'Compliance': '#B8C0D0',
   } : arm === 'Agency' ? {
-    'Retail & distribution': '#FF600A',
-    'Manufacturing & suppliers': '#FF8A50',
-    'Financial & operational': '#FFB74D',
-    'Channel strategy': '#E55509',
-    'Packaging & compliance': '#FF7043',
-    'Operational technology': '#0055FF',
+    'Retail & distribution': '#FF600A', 'Manufacturing': '#FF8A50', 'Finance': '#FFB74D',
+    'Channel strategy': '#E55509', 'Packaging': '#FF7043', 'Technology': '#0055FF',
   } : {
-    'Agency — Retail ops': '#FF600A',
-    'Agency — Manufacturing': '#FF8A50',
-    'Agency — Finance': '#FFB74D',
-    'Pac — Design & brand': '#E0FD2C',
-    'Pac — Materials': '#66BB6A',
-    'Pac — Retail fit': '#C8E820',
+    'Agency — Retail': '#FF600A', 'Agency — Mfg': '#FF8A50',
+    'Pac — Design': '#E0FD2C', 'Pac — Materials': '#66BB6A',
+    'Channel': '#E55509', 'Circularity': '#26C6DA',
   };
   let html = '<h3>Topic families</h3><div class="legend-items">';
   for (const [label, color] of Object.entries(legends)) {
@@ -740,10 +841,12 @@ function updateLegend(arm) {
 }
 updateLegend('all');
 
-// ── Animation loop ──
+// Animation loop
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
+  if (window._activeTab !== 'all') return;
+
   const t = clock.getElapsedTime();
 
   for (const obj of nodeObjects) {
@@ -781,6 +884,7 @@ addEventListener('resize', () => {
   composer.setSize(innerWidth, innerHeight);
   labelRenderer.setSize(innerWidth, innerHeight);
 });
+
 
 setTimeout(() => document.getElementById('loading').classList.add('done'), 800);
 </script>
