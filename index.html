@@ -423,9 +423,11 @@ for (const edge of data.edges) {
   const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(20));
   const opacity = Math.min(0.3, edge.weight / 3000);
   const lineColor = new THREE.Color(src.userData.color).lerp(new THREE.Color(tgt.userData.color), 0.5);
-  edgeGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
     color: lineColor, transparent: true, opacity, blending: THREE.AdditiveBlending
-  })));
+  }));
+  line.userData = edge;
+  edgeGroup.add(line);
 }
 
 // ── Dot enclosure ──
@@ -549,6 +551,7 @@ function onScroll() {
     } else {
       deselectNode();
       ctEl.classList.add('hidden');
+      promptEl.classList.remove('hidden');
       animateCamera(new THREE.Vector3(0, 3, 16), new THREE.Vector3(0, 0, 0));
     }
   }
@@ -589,11 +592,32 @@ function selectNode(obj, fromScroll) {
   const node = obj.userData;
   const connections = data.edges.filter(e => e.source === node.id || e.target === node.id)
     .sort((a, b) => b.weight - a.weight).slice(0, 8);
-  const nodeQuotes = data.quotes.filter(q =>
-    q.arm.toLowerCase() === node.arm.toLowerCase() ||
-    node.label.toLowerCase().includes(q.category.toLowerCase()) ||
-    q.category.toLowerCase().includes(node.arm.toLowerCase())
-  ).slice(0, 3);
+  const labelLower = node.label.toLowerCase();
+  const parentLower = (node.parent || '').toLowerCase();
+  const nodeQuotes = data.quotes
+    .map(q => {
+      let score = 0;
+      const catLower = q.category.toLowerCase();
+      const textLower = (q.text || '').toLowerCase();
+      if (q.arm === node.arm || q.arm === 'Both') score += 1;
+      if (labelLower.includes('retail') && (catLower.includes('cpg') || textLower.includes('retail'))) score += 3;
+      if (labelLower.includes('packaging') && (textLower.includes('packag') || textLower.includes('bottle') || textLower.includes('label'))) score += 3;
+      if (labelLower.includes('manufactur') && (textLower.includes('manufactur') || textLower.includes('co-man') || textLower.includes('supplier'))) score += 3;
+      if (labelLower.includes('inventory') && (textLower.includes('inventor') || textLower.includes('stock') || textLower.includes('forecast'))) score += 3;
+      if (labelLower.includes('sustain') && (textLower.includes('sustain') || textLower.includes('recycl') || textLower.includes('refill'))) score += 3;
+      if (labelLower.includes('design') && (textLower.includes('design') || textLower.includes('brand') || textLower.includes('unbox'))) score += 3;
+      if (labelLower.includes('margin') && (textLower.includes('cost') || textLower.includes('margin') || textLower.includes('price'))) score += 3;
+      if (labelLower.includes('wine') || labelLower.includes('spirits')) { if (catLower.includes('wine')) score += 4; }
+      if (labelLower.includes('beauty') || labelLower.includes('cosmetic')) { if (catLower.includes('beauty')) score += 4; }
+      if (labelLower.includes('electron') || labelLower.includes('hardware')) { if (catLower.includes('electron')) score += 4; }
+      if (labelLower.includes('jewel') || labelLower.includes('luxury')) { if (catLower.includes('luxury') || catLower.includes('jewel')) score += 4; }
+      if (labelLower.includes('wellness') || labelLower.includes('supplement')) { if (catLower.includes('wellness')) score += 4; }
+      return { q, score };
+    })
+    .filter(x => x.score >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(x => x.q);
 
   const accentVar = node.arm === 'Pac' ? 'var(--accent-p)' : 'var(--accent-a)';
   let html = '<h2>' + node.label + '</h2>';
